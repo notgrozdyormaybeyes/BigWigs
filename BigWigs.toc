@@ -228,3 +228,7 @@ Raids\Karazhan\DarkRiderChampion.lua
 
 Battlegrounds\AlteracValley.lua
 Battlegrounds\ArathiBasin.lua
+
+Raids\KFourty\KFourtyGnarlmoon.lua
+Raids\KFourty\KFourtyIncantagos.lua
+Raids\KFourty\KFourtyAnomalus.lua

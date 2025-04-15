@@ -16,4 +16,5 @@ The adjustments were originally made by <a href="https://github.com/MOUZU"><b>LY
 Adjustments for Elysium made by <b>Hosq</b>.<br>
 Adjustments for Turtle-WoW made by <b>CosminPOP</b>.<br>
 Modifications for Turtle-WoW made by <b>Relar/Balake/Pepopo</b>.
+Modifications for Karazhan 40 on Turtle-WoW made by <b>Grozdy from Moments</b>, using only data from <Moments> raids.
 <br>

@@ -3,7 +3,7 @@ local module, L = BigWigs:ModuleDeclaration("Anomalus", "Karazhan")
 
 module.revision = 30020
 module.enabletrigger = module.translatedName
-module.toggleoptions = {"strikes", "bomb", "circle", "dampening", "bosskill"}
+module.toggleoptions = {"strikes", "bomb", "circle", "dampening", "usepoticon", "usepotsound", "bosskill"}
 module.zonename = {
     AceLibrary("AceLocale-2.2"):new("BigWigs")["Tower of Karazhan"],
     AceLibrary("Babble-Zone-2.2")["Tower of Karazhan"],
@@ -14,6 +14,8 @@ module.defaultDB = {
     bomb = true,
     circle = true,
     dampening = true,
+    usepoticon = true,
+    usepotsound = true,
 }
 L:RegisterTranslations("enUS", function() return {
 	cmd = "Anomalus",
@@ -33,7 +35,15 @@ L:RegisterTranslations("enUS", function() return {
     dampening_cmd = "ArcaneDampening",
     dampening_name = "Arcane Dampening Alert",
     dampening_desc = "Warn for Arcane Dampening",
+    
+    usepoticon_cmd = "UsePotionIcon",
+    usepoticon_name = "Use arcane protection potion icon Alert",
+    usepoticon_desc = "Warn for use arcane protection potion icon every 2 min",
 	
+    usepotsound_cmd = "UsePotionSound",
+    usepotsound_name = "Use arcane protection potion sound Alert",
+    usepotsound_desc = "Warn for use arcane protection potion sound every 2 min",
+    
     msg_engage = "Hoping everyone has 230+ AR :)",
 	
     trigger_strikesYou = "You are afflicted by Manabound Strikes %((.+)%).", --CHAT_MSG_SPELL_PERIODIC_SELF_DAMAGE
@@ -58,12 +68,19 @@ L:RegisterTranslations("enUS", function() return {
     msg_dampening = "You have Arcane Damepening! Go to the circle alone!",
     msg_dampeningFade = "Arcane Damepening faded! Don't go to the circle!",
     
-	
+    msg_usepot = "Use GAPP",
+    
+	soundarcanepot0 = "Interface\\Addons\\BigWigs\\Sounds\\arcane_potion.wav",
+	soundarcanepot1 = "Interface\\Addons\\BigWigs\\Sounds\\arcane_potion2.wav",
+	soundarcanepot2 = "Interface\\Addons\\BigWigs\\Sounds\\arcane_potion2.wav",
+    
 	trigger_engage = "Power Overwhelming.",--CHAT_MSG_MONSTER_YELL
 } end )
 
 local warn_strikes_stacks = 10 -- 10 stacks but can be changed
 local last_tank_strikes = ""
+local usepotcounter = 0
+local pot_ontimer = false
 
 local timer = {
     strikes = 60,
@@ -73,11 +90,15 @@ local timer = {
     firstcircle = 24,
     nextcircle = 22, -- not yet used
     circle = 8,
+    usepot = 120,
+    usepotsound_pre = 2,
+    usepoticon = 5,
 }
 local icon = {
     strikes = "Ability_GhoulFrenzy",
     bomb = "Spell_Shadow_MindBomb",
     circle = "INV_Jewelry_Ring_03",
+    usepot = "INV_Potion_83", -- rip no new GAPP icon
 }
 local color = {
     strikes = "White",
@@ -118,10 +139,21 @@ function module:OnEngage()
 	self:Bar(L["bar_circle"], timer.firstcircle, icon.circle, true, color.circle)
 	self:DelayedBar(timer.firstcircle, L["active_circle"], timer.circle, icon.circle, true, color.circle)
 	self:Bar(L["bar_nextbomb"], timer.firstbomb, icon.bomb, true, color.bomb)
+    usepotcounter = 0
+    if self.db.profile.usepoticon then
+        self:ScheduleRepeatingEvent("bwUsepoticon", function() self:UsePotIcon() end, timer.usepot)
+    end
+    if self.db.profile.usepotsound then
+        self:ScheduleEvent("FirstEvent", function()
+            self:UsePotSound()
+            self:ScheduleRepeatingEvent("RepeatingEvent", function() self:UsePotSound() end, timer.usepot)
+        end, timer.usepot - timer.usepotsound_pre)
+    end
 end
 
 function module:OnDisengage()
     self:Message("PUwUray is my bomb OwO")
+    self:CancelAllScheduledEvents()
 end
 
 function module:Event(msg)
@@ -235,4 +267,22 @@ end
 
 function module:DampeningFade()
 	self:Message(L["msg_dampeningFade"], "Attention")
+end
+
+function module:UsePotIcon()
+    if UnitName("Player") == "Kedarunzi" then -- hardcoded, should be changed to IsRaidLeader()
+        SendChatMessage(L["msg_usepot"],"RAID_WARNING")
+    end
+    self:WarningSign(icon.usepot, timer.usepoticon)
+end
+
+function module:UsePotSound()
+    if mod(usepotcounter, 2)  == 0 then
+        PlaySoundFile(L["soundarcanepot0"])
+    elseif mod(usepotcounter, 2)  == 1 then
+        PlaySoundFile(L["soundarcanepot1"])
+    --elseif mod(usepotcounter, 18975123)  == 2 then
+     --   PlaySoundFile(L["soundarcanepot2"])
+    end
+    usepotcounter = usepotcounter + 1
 end

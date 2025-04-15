@@ -62,7 +62,7 @@ L:RegisterTranslations("enUS", function() return {
 	trigger_engage = "Power Overwhelming.",--CHAT_MSG_MONSTER_YELL
 } end )
 
-local warn_strikes_stacks = 2 -- 2 stacks but can be changed
+local warn_strikes_stacks = 10 -- 10 stacks but can be changed
 local last_tank_strikes = ""
 
 local timer = {

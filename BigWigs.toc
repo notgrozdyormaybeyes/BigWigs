@@ -232,3 +232,5 @@ Battlegrounds\ArathiBasin.lua
 Raids\KFourty\KFourtyGnarlmoon.lua
 Raids\KFourty\KFourtyIncantagos.lua
 Raids\KFourty\KFourtyAnomalus.lua
+Raids\KFourty\KFourtyMedivh.lua
+

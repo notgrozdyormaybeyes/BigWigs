@@ -71,10 +71,12 @@ L:RegisterTranslations("enUS", function() return {
     msg_usepot = "Use GAPP",
     
 	soundarcanepot0 = "Interface\\Addons\\BigWigs\\Sounds\\arcane_potion.wav",
-	soundarcanepot1 = "Interface\\Addons\\BigWigs\\Sounds\\arcane_potion2.wav",
-	soundarcanepot2 = "Interface\\Addons\\BigWigs\\Sounds\\arcane_potion2.wav",
+	soundarcanepot1 = "Interface\\Addons\\BigWigs\\Sounds\\arcane-pot.mp3",
+	soundarcanepot3 = "Interface\\Addons\\BigWigs\\Sounds\\arcane_potion3.wav",
     
-	trigger_engage = "Power Overwhelming.",--CHAT_MSG_MONSTER_YELL
+	trigger_engage = "Power Overwhelming.", --CHAT_MSG_MONSTER_YELL
+    trigger_bossDead = "Release...", --CHAT_MSG_MONSTER_YELL
+    
 } end )
 
 local warn_strikes_stacks = 10 -- 10 stacks but can be changed
@@ -92,7 +94,7 @@ local timer = {
     circle = 8,
     usepot = 120,
     usepotsound_pre = 2,
-    usepoticon = 5,
+    usepoticon = 10,
 }
 local icon = {
     strikes = "Ability_GhoulFrenzy",
@@ -152,8 +154,12 @@ function module:OnEngage()
 end
 
 function module:OnDisengage()
-    self:Message("PUwUray is my bomb OwO")
     self:CancelAllScheduledEvents()
+	if (IsRaidLeader() or IsRaidOfficer()) then
+		for i=1,GetNumRaidMembers() do
+            SetRaidTarget("raid"..i, 0)
+		end
+	end
 end
 
 function module:Event(msg)
@@ -172,7 +178,7 @@ function module:Event(msg)
     elseif msg == L["trigger_strikesFade"] then
         self:Sync(syncName.strikesFade)
     
-    elseif msg == L["trigger_bombYou"] then
+    elseif string.find(msg, L["trigger_bombYou"]) then
 		self:Sync(syncName.bomb .. " " .. UnitName("Player"))
 	elseif string.find(msg, L["trigger_bombOther"]) then
 		local _,_, bombPlayer,_ = string.find(msg, L["trigger_bombOther"])
@@ -229,14 +235,13 @@ function module:StrikesFade()
 end
 
 function module:Bomb(rest)
-	--self:Bar(L["bar_nextbomb"], timer.nextbomb, icon.bomb, true, color.bomb)
-	self:Bar(rest..L["bar_bomb"], timer.bomb, icon.bomb, true, color.bomb)
-	self:Message(rest..L["msg_bomb"], "Urgent") --, false, nil, false)
-	-- if IsRaidLeader() then
-	if UnitName("Player") == "Kedarunzi" then
+	if IsRaidLeader() then
         SendChatMessage(rest.." is the Bomb!","RAID_WARNING")
+        --self:Message(rest..L["msg_bomb"], "Urgent") --, false, nil, false)
+        self:Bar(rest..L["bar_bomb"], timer.bomb, icon.bomb, true, color.bomb)
     end
 	if rest == UnitName("Player") then
+        self:Bar(rest..L["bar_bomb"], timer.bomb, icon.bomb, true, color.bomb)
         SendChatMessage(UnitName("Player").." is the Bomb!","SAY")
 		self:WarningSign(icon.bomb, timer.bomb)
 		self:Sound("RunAway")
@@ -270,19 +275,19 @@ function module:DampeningFade()
 end
 
 function module:UsePotIcon()
-    if UnitName("Player") == "Kedarunzi" then -- hardcoded, should be changed to IsRaidLeader()
+    if IsRaidLeader() then 
         SendChatMessage(L["msg_usepot"],"RAID_WARNING")
     end
     self:WarningSign(icon.usepot, timer.usepoticon)
 end
 
 function module:UsePotSound()
-    if mod(usepotcounter, 2)  == 0 then
+    if mod(usepotcounter, 3)  == 0 then
         PlaySoundFile(L["soundarcanepot0"])
-    elseif mod(usepotcounter, 2)  == 1 then
+    elseif mod(usepotcounter, 3)  == 1 then
         PlaySoundFile(L["soundarcanepot1"])
-    --elseif mod(usepotcounter, 18975123)  == 2 then
-     --   PlaySoundFile(L["soundarcanepot2"])
+    elseif mod(usepotcounter, 3)  == 2 then
+        PlaySoundFile(L["soundarcanepot3"])
     end
     usepotcounter = usepotcounter + 1
 end

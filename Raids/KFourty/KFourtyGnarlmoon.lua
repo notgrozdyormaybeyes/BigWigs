@@ -51,7 +51,7 @@ L:RegisterTranslations("enUS", function()
         msg_owlOne = "Gnarlmoon under 68% - Owl Phase Soon (@ 66.6%)!",
         msg_owlTwo = "Gnarlmoon under 35% - Owl Phase Soon (@ 33.3%)!",
         
-        trigger_owls = "Keeper Gnarlmoon gains Worgen Dimension (1)", --CHAT_MSG_SPELL_CREATURE_VS_CREATURE_DAMAGE
+        trigger_owls = "Keeper Gnarlmoon gains Worgen Dimension", --CHAT_MSG_SPELL_PERIODIC_CREATURE_BUFFS
         msg_owls = "Gnarlmoon is Immune! Kill the Owls at the same time!",
         bar_owls = "Owls enrage in..",
         bar_owlsenrage = "Enrage soon, kill the owls!!",
@@ -113,12 +113,10 @@ local syncName = {
 	owls = "Owls"..module.revision,
 	gaze = "Gaze"..module.revision,
 	gazeother = "GazeOther"..module.revision,
-    colorblue = "ColorBlue"..module.revision,
-    colorred = "ColorRed"..module.revision,
 	lowHp = "KeeperGnarlmoon"..module.revision,
 }
 
-lowHp = nil
+lowHp = 0
 healthPct = 100
 lunarShiftCounter = 0
 previousColor = ""
@@ -127,9 +125,13 @@ previousColor = ""
 module:RegisterYellEngage(L["trigger_engage"])
 
 function module:OnEnable()
-	self:RegisterEvent("CHAT_MSG_MONSTER_YELL")--trigger_engage,--trigger_lunarShiftCast,--trigger_bossDead
-	self:RegisterEvent("CHAT_MSG_SPELL_CREATURE_VS_CREATURE_DAMAGE", "Event")--trigger_lunarShiftAfflic,--trigger_owls
+	self:RegisterEvent("CHAT_MSG_MONSTER_YELL", "Event")--trigger_engage,--trigger_lunarShiftCast,--trigger_bossDead
+	self:RegisterEvent("CHAT_MSG_SPELL_CREATURE_VS_CREATURE_BUFF", "Event") --trigger_owls
+	self:RegisterEvent("CHAT_MSG_SPELL_CREATURE_VS_SELF_BUFF", "Event") --trigger_owls
+	self:RegisterEvent("CHAT_MSG_SPELL_PERIODIC_CREATURE_BUFFS", "Event") --trigger_owls
+	self:RegisterEvent("CHAT_MSG_SPELL_CREATURE_VS_CREATURE_DAMAGE", "Event")--trigger_lunarShiftAfflic
 	self:RegisterEvent("CHAT_MSG_SPELL_PERIODIC_SELF_DAMAGE", "Event") --trigger_gaze, --trigger_colorRed, --trigger_colorBlue
+	self:RegisterEvent("CHAT_MSG_SPELL_PERIODIC_FRIENDLYPLAYER_DAMAGE", "Event") 
 	self:RegisterEvent("CHAT_MSG_SPELL_PERIODIC_PARTY_DAMAGE", "Event") 
 	self:RegisterEvent("UNIT_HEALTH") --lowHp
 	
@@ -137,8 +139,6 @@ function module:OnEnable()
 	self:ThrottleSync(5, syncName.owls)
 	self:ThrottleSync(5, syncName.gaze)
 	self:ThrottleSync(5, syncName.gazeother)
-	self:ThrottleSync(5, syncName.colorblue)
-	self:ThrottleSync(5, syncName.colorred)
 	self:ThrottleSync(3, syncName.lowHp)
 end
 
@@ -150,7 +150,7 @@ end
 function module:OnEngage()
 	if self.db.profile.lunarshift then
 		self:Bar(L["bar_lunarShiftCd"], timer.lunarshift, icon.lunarshift, true, color.lunarshift)
-		self:DelayedBar(timer.lunarshift, L["bar_lunarShiftCast"], timer.lunarshift_cast, icon.lunarshift, true, color.lunarshift_cast)
+		--self:DelayedBar(timer.lunarshift, L["bar_lunarShiftCast"], timer.lunarshift_cast, icon.lunarshift, true, color.lunarshift_cast)
 	end
 	
 	if self.db.profile.ravens then
@@ -161,53 +161,33 @@ function module:OnEngage()
 end
 
 function module:OnDisengage()
-    self:Message("GrOwOzdy loves PUwUray")
 end
 
-
-function module:CHAT_MSG_MONSTER_YELL(msg)
-	if msg == L["trigger_engage"] then
-		module:SendEngageSync()
-	end
-end
-function module:CHAT_MSG_SPELL_CREATURE_VS_CREATURE_DAMAGE(msg)
-    if string.find(msg, L["trigger_owls"]) then
-		self:Sync(syncName.owls)
-    end
-end
-
-function module:CHAT_MSG_SPELL_PERIODIC_SELF_DAMAGE(msg)
-    if string.find(msg, L["trigger_colorblue"]) then
-        self:Message(L["msg_red"], "Important", true, "Alarm")
-    elseif string.find(msg, L["trigger_colorred"]) then
-        self:Message(L["msg_blue"], "Important", true, "Alert")
-    end
-end
 
 function module:UNIT_HEALTH(msg)
 	if UnitName(msg) == "Keeper Gnarlmoon" then
 		healthPct = UnitHealth(msg) * 100 / UnitHealthMax(msg)
-		if healthPct >= 69 and lowHp ~= nil then
-			lowHp = nil
-		elseif healthPct < 69 and healthPct > 65 and lowHp == nil then
+		if healthPct >= 69 and lowHp ~= 0 then
+			lowHp = 0
+		elseif healthPct < 69 and healthPct > 65 and lowHp == 0 then
 			self:Sync(syncName.lowHp)
-        elseif healthPct <= 65 and lowHp ~= nil then
-			lowHp = nil
-		elseif healthPct < 36 and lowHp == nil then
+		elseif healthPct < 36 and lowHp == 1 then
 			self:Sync(syncName.lowHp)
-        elseif healthPct <= 33 and lowHp ~= nil then
-			lowHp = nil
+        elseif healthPct <= 33 and lowHp == 2 then
+			lowHp = -1
 		end
 	end
 end
 
 function module:Event(msg)
-	if msg == L["trigger_lunarShiftAfflic"] then
+	if msg == L["trigger_engage"] then
+		module:SendEngageSync()
+        
+	elseif string.find(msg, L["trigger_lunarShiftCast"]) then
 		self:Sync(syncName.lunarshift)
 	
-	elseif msg == L["trigger_owls"] and self.db.profile.owls then
+    elseif string.find(msg, L["trigger_owls"]) then
 		self:Sync(syncName.owls)
-	
     elseif msg == L["trigger_gaze"] and self.db.profile.gaze then
         self:Gaze()
         
@@ -235,11 +215,12 @@ function module:BigWigs_RecvSync(sync, rest, nick)
 end
 
 function module:LowHp()
-	lowHp = true
-    if healthPct < 36 then
+    if healthPct < 36 and lowHp == 1 then
         self:Message(L["msg_owlTwo"], "Important", true, "Alarm")
-    else
+        lowHp = 2
+    elseif lowHp == 0 then
         self:Message(L["msg_owlOne"], "Important", true, "Alarm")
+        lowHp = 1
     end    
 end
 
@@ -255,8 +236,8 @@ function module:NewColor(newColor)
 end
 
 function module:LunarShift()
+	self:Bar( L["bar_lunarShiftCast"], timer.lunarshift_cast, icon.lunarshift, true, color.lunarshift_cast)
     self:Bar(L["bar_lunarShiftCd"], timer.lunarshift, icon.lunarshift, true, color.lunarshift)
-	self:DelayedBar(timer.lunarshift, L["bar_lunarShiftCast"], timer.lunarshift_cast, icon.lunarshift, true, color.lunarshift_cast)
     lunarShiftCounter = lunarShiftCounter + 1
     if mod(lunarShiftCounter, 4) == 1 then
         self:Bar(L["bar_ravens"], 25, icon.ravens, true, color.ravens)
@@ -282,7 +263,7 @@ end
 function module:GazeOther(rest)
 	self:Message(rest..L["msg_gaze"], "Attention")
 
-	self:Bar(rest..L["bar_gaze"].. " >Click Me<", timer.mark, icon.mark, true, color.mark)
+	-- self:Bar(rest..L["bar_gaze"].. " >Click Me<", timer.mark, icon.mark, true, color.mark)
 	--self:SetCandyBarOnClick("BigWigsBar "..rest..L["bar_gaze"].. " >Click Me<", function(name, button, extra) TargetByName(extra, true) end, rest)
 
 	--if (IsRaidLeader() or IsRaidOfficer()) then

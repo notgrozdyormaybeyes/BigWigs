@@ -3,7 +3,7 @@ local module, L = BigWigs:ModuleDeclaration("Keeper Gnarlmoon", "Karazhan")
 
 module.revision = 30020
 module.enabletrigger = module.translatedName
-module.toggleoptions = {"lunarshift", "owls", "ravens", "color", "gaze"}
+module.toggleoptions = {"lunarshift", "owls", "owlsHp", "ravens", "color", "gaze"}
 module.zonename = {
     AceLibrary("AceLocale-2.2"):new("BigWigs")["Tower of Karazhan"],
     AceLibrary("Babble-Zone-2.2")["Tower of Karazhan"],
@@ -12,6 +12,7 @@ module.zonename = {
 module.defaultDB = {
  lunarshift = true,
  owls = true,
+ owlsHp = true,
  ravens = true,
  color = true,
  gaze = true,
@@ -28,6 +29,10 @@ L:RegisterTranslations("enUS", function()
         owls_cmd = "owls",
         owls_name = "Owls Alert",
         owls_desc = "Warn for Owls",
+        
+        owlsHp_cmd = "OwlsHP",
+        owlsHp_name = "Owls HP Alert",
+        owlsHp_desc = "Warn for Owls HP",
         
         ravens_cmd = "ravens",
         ravens_name = "Blood Ravens Alert",
@@ -52,9 +57,18 @@ L:RegisterTranslations("enUS", function()
         msg_owlTwo = "Gnarlmoon under 35% - Owl Phase Soon (@ 33.3%)!",
         
         trigger_owls = "Keeper Gnarlmoon gains Worgen Dimension", --CHAT_MSG_SPELL_PERIODIC_CREATURE_BUFFS
+        trigger_end_owls = "Worgen Dimension fades from Keeper Gnarlmoon.",
         msg_owls = "Gnarlmoon is Immune! Kill the Owls at the same time!",
         bar_owls = "Owls enrage in..",
         bar_owlsenrage = "Enrage soon, kill the owls!!",
+        
+        redowl = "Red Owl",
+        blueowl = "Blue Owl",
+        selfhitone = "Your ",  -- i am too lazy for regex
+        selfhittwo = " hits ",
+        selfhitthree = " for ",
+        selfspellone = " suffers ",  -- i am too lazy for regex
+        selfspelltwo = " damage from your ",
         
         bar_ravens = "Next Ravens",
         bar_ravensSoon = "Ravens Soon",
@@ -77,6 +91,15 @@ L:RegisterTranslations("enUS", function()
 end 
 )
 
+local boss_guid = ""
+local redowlone_guid = nil
+local redowltwo_guid = nil
+local blueowlone_guid = nil
+local blueowltwo_guid = nil
+local lowHp = 0
+local healthPct = 100
+local lunarShiftCounter = 0
+local previousColor = ""
 
 
 local timer = {
@@ -97,6 +120,11 @@ local icon = {
 	blue = "Inv_misc_head_dragon_blue",
 	gaze = "Spell_Shadow_Charm",
 	mark = "Ability_Hunter_Snipershot",
+    hpBar = "Spell_Holy_SealOfSacrifice", 
+    hpBarCross = "INV_Bijou_Red", 
+    hpBarCircle = "INV_Bijou_Orange", 
+    hpBarSquare = "INV_Bijou_Blue", 
+    hpBarTriangle = "INV_Bijou_Green", 
 }
 local color = {
 	lunarshift = "Black",
@@ -107,19 +135,21 @@ local color = {
 	ravens_soon = "Cyan",
 	gaze = "Green",
     mark = "Green",
+	hpBar = "Magenta",
 }
 local syncName = {
+    bossguid = "BossGuid"..module.revision,
 	lunarshift = "LunarShift"..module.revision,
 	owls = "Owls"..module.revision,
+	redowlone = "RedOwlOne"..module.revision,
+	redowltwo = "RedOwlTwo"..module.revision,
+	blueowlone = "BlueOwlOne"..module.revision,
+	blueowltwo = "BlueOwlTwo"..module.revision,
 	gaze = "Gaze"..module.revision,
 	gazeother = "GazeOther"..module.revision,
 	lowHp = "KeeperGnarlmoon"..module.revision,
 }
 
-lowHp = 0
-healthPct = 100
-lunarShiftCounter = 0
-previousColor = ""
 
 
 module:RegisterYellEngage(L["trigger_engage"])
@@ -135,8 +165,19 @@ function module:OnEnable()
 	self:RegisterEvent("CHAT_MSG_SPELL_PERIODIC_PARTY_DAMAGE", "Event") 
 	self:RegisterEvent("UNIT_HEALTH") --lowHp
 	
+    if SUPERWOW_VERSION then -- check if SuperWoW is used. if not, pray that someone has it to sync with you :)
+        --self:RegisterEvent("UNIT_CASTEVENT", "CastEvent")
+        self:RegisterEvent("CHAT_MSG_SPELL_SELF_DAMAGE", "OwlHpTrack") 
+        self:RegisterEvent("CHAT_MSG_COMBAT_SELF_HITS", "OwlHpTrack") 
+    end
+    
+	self:ThrottleSync(20, syncName.bossguid)
 	self:ThrottleSync(5, syncName.lunarshift)
 	self:ThrottleSync(5, syncName.owls)
+	self:ThrottleSync(5, syncName.redowlone)
+	self:ThrottleSync(5, syncName.redowltwo)
+	self:ThrottleSync(5, syncName.blueowlone)
+	self:ThrottleSync(5, syncName.blueowltwo)
 	self:ThrottleSync(5, syncName.gaze)
 	self:ThrottleSync(5, syncName.gazeother)
 	self:ThrottleSync(3, syncName.lowHp)
@@ -148,6 +189,12 @@ function module:OnSetup()
 end
 
 function module:OnEngage()
+    if SUPERWOW_VERSION and IsRaidLeader() then --UnitClass("Player") == "Hunter" then -- hunter chads helping other chads
+        TargetByName("Keeper Gnarlmoon", true) --enUS hardcoded... should use L["bossname"]
+        local _, boss_guid = UnitExists("target")
+        self:Sync(syncName.bossguid.." "..boss_guid)
+        TargetLastTarget()
+    end
 	if self.db.profile.lunarshift then
 		self:Bar(L["bar_lunarShiftCd"], timer.lunarshift, icon.lunarshift, true, color.lunarshift)
 		--self:DelayedBar(timer.lunarshift, L["bar_lunarShiftCast"], timer.lunarshift_cast, icon.lunarshift, true, color.lunarshift_cast)
@@ -179,6 +226,50 @@ function module:UNIT_HEALTH(msg)
 	end
 end
 
+function module:OwlHpTrack(msg)
+    if string.find(msg, L["redowl"]) then 
+        if string.find(msg, L["selfhitone"]) and string.find(msg, L["selfhitone"]) and string.find(msg, L["selfhitone"]) then
+            local v, tar_guid = UnitExists("target")
+            if v and tar_guid == redowlone_guid then
+                local hp_pct = math.floor(UnitHealth("target") * 100 / UnitHealthMax("target"))
+                self:Sync(syncName.redowlone.." "..redowlone_guid.." "..hp_pct)
+            elseif v and tar_guid == redowltwo_guid then
+                local hp_pct = math.floor(UnitHealth("target") * 100 / UnitHealthMax("target"))
+                self:Sync(syncName.redowltwo.." "..redowltwo_guid.." "..hp_pct)
+            end
+        elseif string.find(msg, L["selfspellone"]) and string.find(msg, L["selfspellone"]) then
+            local v, tar_guid = UnitExists("target")
+            if v and tar_guid == redowlone_guid then
+                local hp_pct = math.floor(UnitHealth("target") * 100 / UnitHealthMax("target"))
+                self:Sync(syncName.redowlone.." "..redowlone_guid.." "..hp_pct)
+            elseif v and tar_guid == redowltwo_guid then
+                local hp_pct = math.floor(UnitHealth("target") * 100 / UnitHealthMax("target"))
+                self:Sync(syncName.redowltwo.." "..redowltwo_guid.." "..hp_pct)
+            end
+        end
+    elseif string.find(msg, L["blueowl"]) then 
+        if string.find(msg, L["selfhitone"]) and string.find(msg, L["selfhitone"]) and string.find(msg, L["selfhitone"]) then
+            local v, tar_guid = UnitExists("target")
+            if v and tar_guid == blueowlone_guid then
+                local hp_pct = math.floor(UnitHealth("target") * 100 / UnitHealthMax("target"))
+                self:Sync(syncName.blueowlone.." "..blueowlone_guid.." "..hp_pct)
+            elseif v and tar_guid == blueowltwo_guid then
+                local hp_pct = math.floor(UnitHealth("target") * 100 / UnitHealthMax("target"))
+                self:Sync(syncName.blueowltwo.." "..blueowltwo_guid.." "..hp_pct)
+            end
+        elseif string.find(msg, L["selfspellone"]) and string.find(msg, L["selfspellone"]) then
+            local v, tar_guid = UnitExists("target")
+            if v and tar_guid == blueowlone_guid then
+                local hp_pct = math.floor(UnitHealth("target") * 100 / UnitHealthMax("target"))
+                self:Sync(syncName.blueowlone.." "..blueowlone_guid.." "..hp_pct)
+            elseif v and tar_guid == blueowltwo_guid then
+                local hp_pct = math.floor(UnitHealth("target") * 100 / UnitHealthMax("target"))
+                self:Sync(syncName.blueowltwo.." "..blueowltwo_guid.." "..hp_pct)
+            end
+        end
+    end
+end
+
 function module:Event(msg)
 	if msg == L["trigger_engage"] then
 		module:SendEngageSync()
@@ -188,6 +279,8 @@ function module:Event(msg)
 	
     elseif string.find(msg, L["trigger_owls"]) then
 		self:Sync(syncName.owls)
+    elseif string.find(msg, L["trigger_end_owls"]) then
+        self:EndOwls()
     elseif msg == L["trigger_gaze"] and self.db.profile.gaze then
         self:Gaze()
         
@@ -211,6 +304,22 @@ function module:BigWigs_RecvSync(sync, rest, nick)
 		self:Owls()
 	elseif sync == syncName.lowHp then
 		self:LowHp()
+    elseif sync == syncName.redowlone and rest then
+        local rest_id, rest_hp = string.match(rest, "(%S+)%s(%S+)")
+        redowlone_guid = rest_id
+        self:UpdateOwlHP(rest_id, rest_hp)
+    elseif sync == syncName.redowltwo and rest then
+        local rest_id, rest_hp = string.match(rest, "(%S+)%s(%S+)")
+        redowltwo_guid = rest_id
+        self:UpdateOwlHP(rest_id, rest_hp)
+    elseif sync == syncName.blueowlone and rest then
+        local rest_id, rest_hp = string.match(rest, "(%S+)%s(%S+)")
+        blueowlone_guid = rest_id
+        self:UpdateOwlHP(rest_id, rest_hp)
+    elseif sync == syncName.blueowltwo and rest then
+        local rest_id, rest_hp = string.match(rest, "(%S+)%s(%S+)")
+        blueowltwo_guid = rest_id
+        self:UpdateOwlHP(rest_id, rest_hp)
 	end
 end
 
@@ -252,9 +361,30 @@ function module:Owls()
     self:Bar(L["bar_owls"], timer.owls_enrage, icon.owls, true, color.owls_enragesoon)
     --self:DelayedBar(timer.owls_enrage - timer.owls_enragesoon, L["bar_owlsenrage"], timer.owls_enragesoon, icon.owls_enragesoon, true, color.owls_enragesoon)
 	self:Message(L["msg_owls"], "Urgent", true, "Alarm")
-	self:DelayedMessage(timer.owls_enrage - timer.owls_enragesoonw, L["bar_owlsenrage"], "Urgent", nil, nil, true)
+	self:DelayedMessage(timer.owls_enrage - timer.owls_enragesoon, L["bar_owlsenrage"], "Urgent", nil, nil, true)
+    if self.db.profile.owlsHp then
+        self:TriggerEvent("BigWigs_StartHPBar", self, "Cross Red Owl", 100, icon.hpBarCross, true, color.hpBar)
+        self:TriggerEvent("BigWigs_StartHPBar", self, "Circle Red Owl", 100, icon.hpBarCircle, true, color.hpBar)
+        self:TriggerEvent("BigWigs_StartHPBar", self, "Square Blue Owl", 100, icon.hpBarSquare, true, color.hpBar)
+        self:TriggerEvent("BigWigs_StartHPBar", self, "Triangle Blue Owl", 100, icon.hpBarTriangle, true, color.hpBar)
+        self:OwlsIcons()
+    end
 end
 
+function module:EndOwls()
+	--self:TriggerEvent("BigWigs_SetHPBar", self, "Cross Red Owl", 0)
+	--self:TriggerEvent("BigWigs_SetHPBar", self, "Circle Red Owl", 0)
+	--self:TriggerEvent("BigWigs_SetHPBar", self, "Square Blue Owl", 0)
+	--self:TriggerEvent("BigWigs_SetHPBar", self, "Triangle Blue Owl", 0)
+    self:TriggerEvent("BigWigs_StopHPBar", self, "Cross Red Owl")
+    self:TriggerEvent("BigWigs_StopHPBar", self, "Circle Red Owl")
+    self:TriggerEvent("BigWigs_StopHPBar", self, "Square Blue Owl")
+    self:TriggerEvent("BigWigs_StopHPBar", self, "Triangle Blue Owl")
+    redowlone_guid = nil
+    redowltwo_guid = nil
+    blueowlone_guid = nil
+    blueowltwo_guid = nil
+end
 
 function module:Gaze()
 	self:Message(L["msg_gazeYou"], "Urgent", true, "Alarm")
@@ -273,4 +403,75 @@ function module:GazeOther(rest)
 	--		end
 	--	end
 	--end
+end
+
+function module:OwlsIcons()
+    if SUPERWOW_VERSION and (IsRaidLeader() or IsRaidOfficer()) then -- RL sacrificed for the greater good, sorry bro
+        -- Red Owls first 
+        TargetByName(L["redowl"], true) 
+        SetRaidTarget("target", 7); -- cross
+        local _, potential_guid = UnitExists("target")
+        if redowlone_guid == nil and potential_guid ~= redowltwo_guid then
+            redowlone_guid = potential_guid
+            self:Sync(syncName.redowlone.." "..redowlone_guid.." 100")
+        end
+        local searchsecondowl = true
+        local attempts = 0
+        TargetNearestEnemy()
+        while redowltwo_guid == nil and searchsecondowl and attempts < 5 do
+            if UnitName("target") == L["redowl"] then
+                local _, potential_guid = UnitExists("target")
+                if potential_guid ~= redowlone_guid then 
+                    redowltwo_guid = potential_guid
+                    SetRaidTarget("target", 2); -- circle
+                    searchsecondowl = false
+                    break 
+                end
+            end
+            attempts = attempts + 1
+            TargetNearestEnemy()
+        end
+        self:Sync(syncName.redowltwo.." "..redowltwo_guid.." 100")
+    end
+    if SUPERWOW_VERSION and IsRaidOfficer() then -- assist sacrificed for the greater good, sorry bro
+        -- Blue Owls 
+        TargetByName(L["blueowl"], true) 
+        SetRaidTarget("target", 6); -- Square
+        local _, potential_guid = UnitExists("target")
+        if blueowlone_guid == nil and potential_guid ~= blueowltwo_guid then
+            blueowlone_guid = potential_guid
+            self:Sync(syncName.blueowlone.." "..blueowlone_guid.." 100")
+        end
+        local searchsecondowl = true
+        local attempts = 0
+        TargetNearestEnemy()
+        while blueowltwo_guid == nil and searchsecondowl and attempts < 5 do
+            if UnitName("target") == L["blueowl"] then
+                local _, potential_guid = UnitExists("target")
+                if potential_guid ~= blueowlone_guid then 
+                    blueowltwo_guid = potential_guid
+                    SetRaidTarget("target", 4); -- triangle
+                    searchsecondowl = false
+                    break 
+                end
+            end
+            attempts = attempts + 1
+            TargetNearestEnemy()
+        end
+        self:Sync(syncName.blueowltwo.." "..blueowltwo_guid.." 100")
+    end
+end
+
+function module:UpdateOwlHP(owlguid, hp_pct)
+    if self.db.profile.owlsHp then
+        if owlguid == redowlone_guid then 
+            self:TriggerEvent("BigWigs_SetHPBar", self, "Cross Red Owl", 100-hp_pct)
+        elseif owlguid == redowltwo_guid then 
+            self:TriggerEvent("BigWigs_SetHPBar", self, "Circle Red Owl", 100-hp_pct)
+        elseif owlguid == blueowlone_guid then 
+            self:TriggerEvent("BigWigs_SetHPBar", self, "Square Blue Owl", 100-hp_pct)
+        elseif owlguid == blueowltwo_guid then 
+            self:TriggerEvent("BigWigs_SetHPBar", self, "Triangle Blue Owl", 100-hp_pct)
+        end
+    end
 end

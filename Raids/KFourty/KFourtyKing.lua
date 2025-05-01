@@ -10,7 +10,7 @@ module.zonename = {
 }
 
 module.defaultDB = {
-    kingsfury = false,
+    kingsfury = true,
     darksubservience = true,
     charmingpresence = true,
     trample = true, 
@@ -253,7 +253,7 @@ function module:BigWigs_RecvSync(sync, rest, nick)
     if sync == syncName.bossguid then
         medivh_guid = rest
     elseif sync == syncName.kingsfury and self.db.profile.kingsfury then
-        self:kingsfury()
+        self:Kingsfury()
     elseif sync == syncName.darksubservience and rest and self.db.profile.darksubservience then
 		self:DarkSubservience(rest)
 	elseif sync == syncName.darksubservienceFade and rest and self.db.profile.darksubservience then

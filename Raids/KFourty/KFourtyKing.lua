@@ -19,7 +19,7 @@ module.defaultDB = {
     usepotsound = false,
 }
 L:RegisterTranslations("enUS", function() return {
-	cmd = "King",
+    cmd = "King",
     
     kingsfury_cmd = "KingsFury",
     kingsfury_name = "King's Fury Alert",
@@ -35,34 +35,37 @@ L:RegisterTranslations("enUS", function() return {
     
     trample_cmd = "Trample",
     trample_name = "Trample Alert",
-    trample_desc = "Warning frame for Trample",
+    trample_desc = "Warning for Trample",
     
     fortify_cmd = "Fortify",
     fortify_name = "Fortify Alert",
-    fortify_desc = "Warning frame for Fortify",
+    fortify_desc = "Warning for Fortify",
     
     usepoticon_cmd = "UsePotionIcon",
-    usepoticon_name = "Use shadow protection potion icon Alert",
-    usepoticon_desc = "Warn for use shadow protection potion icon every 2 min",
-	
-    usepotsound_cmd = "UsePotionSound",
-    usepotsound_name = "Use shadow protection potion sound Alert",
-    usepotsound_desc = "Warn for use shadow protection potion sound every 2 min",
+    usepoticon_name = "Use GSPP icon Alert",
+    usepoticon_desc = "Warn to use GSPP icon every 2 min",
     
-    kingsfury_bar = "King's Fury, HIDE!",
+    usepotsound_cmd = "UsePotionSound",
+    usepotsound_name = "Use GSPP sound Alert",
+    usepotsound_desc = "Warn to use GSPP sound every 2 min",
+    
+    trigger_invz = "Void Zone's Consumption hits you",
+    msg_invz = "You are in a Void Zone! Move out!",
+    
+    kingsfury_bar = "King's Fury, HIDE OUT OF LOS!",
     
     trigger_darksubservienceYou = "You are afflicted by Dark Subservience", --CHAT_MSG_SPELL_PERIODIC_SELF_DAMAGE
     trigger_darksubservienceOther = "(.+) is afflicted by Dark Subservience",  --CHAT_MSG_SPELL_PERIODIC_PARTY_DAMAGE // CHAT_MSG_SPELL_PERIODIC_FRIENDLYPLAYER_DAMAGE
-	trigger_darksubservienceFade = "Dark Subservience fades from (.+).", --CHAT_MSG_SPELL_AURA_GONE_SELF // CHAT_MSG_SPELL_AURA_GONE_PARTY // CHAT_MSG_SPELL_AURA_GONE_OTHER
-	bar_darksubservience = " must bow to the Queen!",
-	msg_darksubservienceYou = "RUN to the Queen and bow!",
+    trigger_darksubservienceFade = "Dark Subservience fades from (.+).", --CHAT_MSG_SPELL_AURA_GONE_SELF // CHAT_MSG_SPELL_AURA_GONE_PARTY // CHAT_MSG_SPELL_AURA_GONE_OTHER
+    bar_darksubservience = " must bow to the Queen!",
+    msg_darksubservienceYou = "RUN to the Queen and bow!",
     soundbow = "Interface\\Addons\\BigWigs\\Sounds\\zeliekobey.mp3",
     soundbowkeda = "Interface\\Addons\\BigWigs\\Sounds\\kedaobey.mp3",
     
     trigger_mcYou = "You are afflicted by Charming Presence",
     trigger_mcOther = "(.+) %(Queen%)is afflicted by Charming Presence", 
-	trigger_mcFade = "Charming Presence fades from (.+).", 
-	bar_mc = " is Mind Controlled!",
+    trigger_mcFade = "Charming Presence fades from (.+).", 
+    bar_mc = " is Mind Controlled!",
     
     trigger_trample = "(.+) is afflicted by Trample", 
     msg_trampleone = "Trample on ",
@@ -73,10 +76,10 @@ L:RegisterTranslations("enUS", function() return {
     msg_fortify = "Rook takes reduced damage and reflects",
     
     msg_usepot = "Use GSPP",
-	soundgspp = "Interface\\Addons\\BigWigs\\Sounds\\shadowpot.wav",
+    soundgspp = "Interface\\Addons\\BigWigs\\Sounds\\shadowpot.wav",
     
-	trigger_engage = "",--CHAT_MSG_MONSTER_YELL
-    trigger_queen = "My Kind, I have come to your aid.",
+    trigger_engage = "",--CHAT_MSG_MONSTER_YELL
+    trigger_queen = "My King, I have come to your aid.",
     
 } end )
 
@@ -108,7 +111,7 @@ local icon = {
 }
 local color = {
     kingsfury = "Red",
-	darksubservience = "Pink",
+    darksubservience = "Pink",
     mc = "Purple",
     trample = "Blue",
     fortify = "Yellow",
@@ -117,7 +120,7 @@ local color = {
 }
 local syncName = {
     bossguid = "BossGuid"..module.revision,
-	kingsfury = "KingsFury"..module.revision,
+    kingsfury = "KingsFury"..module.revision,
     darksubservience = "DarkSubservience"..module.revision,
     darksubservienceFade = "DarkSubservienceFade"..module.revision,
     mc = "CharmingPresence"..module.revision,
@@ -128,35 +131,35 @@ local syncName = {
 --module:RegisterYellEngage(L["trigger_engage"]) --since the king doesn't yell anything :(
 
 function module:OnEnable()
-	self:RegisterEvent("CHAT_MSG_MONSTER_YELL", "Event") --trigger_engage
-	self:RegisterEvent("CHAT_MSG_SPELL_PERIODIC_CREATURE_BUFFS", "Event") 
-	self:RegisterEvent("CHAT_MSG_SPELL_PERIODIC_SELF_DAMAGE", "Event") 
-	self:RegisterEvent("CHAT_MSG_SPELL_PERIODIC_PARTY_DAMAGE", "Event") 
-	self:RegisterEvent("CHAT_MSG_SPELL_PERIODIC_FRIENDLYPLAYER_DAMAGE", "Event") 
-	self:RegisterEvent("CHAT_MSG_SPELL_AURA_GONE_SELF", "Event") 
-	self:RegisterEvent("CHAT_MSG_SPELL_AURA_GONE_PARTY", "Event") 
-	self:RegisterEvent("CHAT_MSG_SPELL_AURA_GONE_OTHER", "Event") 
+    self:RegisterEvent("CHAT_MSG_MONSTER_YELL", "Event") --trigger_engage
+    self:RegisterEvent("CHAT_MSG_SPELL_PERIODIC_CREATURE_BUFFS", "Event") 
+    self:RegisterEvent("CHAT_MSG_SPELL_PERIODIC_SELF_DAMAGE", "Event") 
+    self:RegisterEvent("CHAT_MSG_SPELL_PERIODIC_PARTY_DAMAGE", "Event") 
+    self:RegisterEvent("CHAT_MSG_SPELL_PERIODIC_FRIENDLYPLAYER_DAMAGE", "Event") 
+    self:RegisterEvent("CHAT_MSG_SPELL_AURA_GONE_SELF", "Event") 
+    self:RegisterEvent("CHAT_MSG_SPELL_AURA_GONE_PARTY", "Event") 
+    self:RegisterEvent("CHAT_MSG_SPELL_AURA_GONE_OTHER", "Event") 
     self:RegisterEvent("PLAYER_REGEN_DISABLED", "HandleCombatStart")
     
     self:RegisterEvent("CHAT_MSG_SAY", "HandleMessage")
     
     if SUPERWOW_VERSION then -- check if SuperWoW is used. if not, pray that someone has it to sync with you :)
         self:RegisterEvent("UNIT_CASTEVENT", "CastEvent")
-        self:RegisterEvent("UNIT_HEALTH") --useless without SuperWow
+        --self:RegisterEvent("UNIT_HEALTH") 
     end
     
-	self:ThrottleSync(20, syncName.bossguid)
-	self:ThrottleSync(5, syncName.kingsfury)
-	self:ThrottleSync(3, syncName.darksubservience)
-	self:ThrottleSync(3, syncName.darksubservienceFade)
-	self:ThrottleSync(3, syncName.mc)
-	self:ThrottleSync(3, syncName.mcFade)
-	self:ThrottleSync(3, syncName.trample)
+    self:ThrottleSync(20, syncName.bossguid)
+    self:ThrottleSync(5, syncName.kingsfury)
+    self:ThrottleSync(3, syncName.darksubservience)
+    self:ThrottleSync(3, syncName.darksubservienceFade)
+    self:ThrottleSync(3, syncName.mc)
+    self:ThrottleSync(3, syncName.mcFade)
+    self:ThrottleSync(3, syncName.trample)
     
 end
 
 function module:OnSetup()
-	self.started = nil
+    self.started = nil
 end
 
 function module:OnEngage()
@@ -180,11 +183,11 @@ end
 
 function module:OnDisengage()
     self:CancelAllScheduledEvents()
-	if (IsRaidLeader() or IsRaidOfficer()) then
-		for i=1,GetNumRaidMembers() do
+    if (IsRaidLeader() or IsRaidOfficer()) then
+        for i=1,GetNumRaidMembers() do
             SetRaidTarget("raid"..i, 0)
-		end
-	end
+        end
+    end
     
 end
 
@@ -194,23 +197,23 @@ end
 
 function module:HandleMessage(msg, sender)
     if tostring(sender) == "Grozdy" and tostring(msg)=="baguette" then
-        SendChatMessage("bruh","SAY")
+        SendChatMessage("brah","SAY")
     end
 end
 
 function module:UNIT_HEALTH(msg)
-	if UnitName(msg) == "Keeper Gnarlmoon" then
-		healthPct = UnitHealth(msg) * 100 / UnitHealthMax(msg)
-		if healthPct >= 69 and lowHp ~= 0 then
-			lowHp = 0
-		elseif healthPct < 69 and healthPct > 65 and lowHp == 0 then
-			self:Sync(syncName.lowHp)
-		elseif healthPct < 36 and lowHp == 1 then
-			self:Sync(syncName.lowHp)
+    if UnitName(msg) == "Keeper Gnarlmoon" then
+        healthPct = UnitHealth(msg) * 100 / UnitHealthMax(msg)
+        if healthPct >= 69 and lowHp ~= 0 then
+            lowHp = 0
+        elseif healthPct < 69 and healthPct > 65 and lowHp == 0 then
+            self:Sync(syncName.lowHp)
+        elseif healthPct < 36 and lowHp == 1 then
+            self:Sync(syncName.lowHp)
         elseif healthPct <= 33 and lowHp == 2 then
-			lowHp = -1
-		end
-	end
+            lowHp = -1
+        end
+    end
 end
 
 function module:CastEvent(casterGuid, targetGuid, eventType, spellId, castTime)
@@ -224,28 +227,30 @@ end
 
 function module:Event(msg)
     if string.find(msg, L["trigger_darksubservienceYou"]) then
-		self:Sync(syncName.darksubservience .. " " .. UnitName("Player"))
-	elseif string.find(msg, L["trigger_darksubservienceOther"]) then
-		local _,_, dsPlayer,_ = string.find(msg, L["trigger_darksubservienceOther"])
-		self:Sync(syncName.darksubservience .. " " .. dsPlayer)
-	elseif string.find(msg, L["trigger_darksubservienceFade"]) then
-		local _,_, dsFadePlayer,_ = string.find(msg, L["trigger_darksubservienceFade"])
-		if dsFadePlayer == "you" then dsFadePlayer = UnitName("Player") end
-		self:Sync(syncName.darksubservienceFade .. " " .. dsFadePlayer)
+        self:Sync(syncName.darksubservience .. " " .. UnitName("Player"))
+    elseif string.find(msg, L["trigger_darksubservienceOther"]) then
+        local _,_, dsPlayer,_ = string.find(msg, L["trigger_darksubservienceOther"])
+        self:Sync(syncName.darksubservience .. " " .. dsPlayer)
+    elseif string.find(msg, L["trigger_darksubservienceFade"]) then
+        local _,_, dsFadePlayer,_ = string.find(msg, L["trigger_darksubservienceFade"])
+        if dsFadePlayer == "you" then dsFadePlayer = UnitName("Player") end
+        self:Sync(syncName.darksubservienceFade .. " " .. dsFadePlayer)
     elseif string.find(msg, L["trigger_mcYou"]) then
-		self:Sync(syncName.mc .. " " .. UnitName("Player"))
-	elseif string.find(msg, L["trigger_mcOther"]) then
-		local _,_, mcPlayer,_ = string.find(msg, L["trigger_mcOther"])
-		self:Sync(syncName.mc .. " " .. mcPlayer)
-	elseif string.find(msg, L["trigger_mcFade"]) then
-		local _,_, mcFadePlayer,_ = string.find(msg, L["trigger_mcFade"])
-		if mcFadePlayer == "you" then mcFadePlayer = UnitName("Player") end
-		self:Sync(syncName.mc .. " " .. mcFadePlayer)
-	elseif string.find(msg, L["trigger_trample"]) then
-		local _,_, trPlayer,_ = string.find(msg, L["trigger_trample"])
-		self:Sync(syncName.trample .. " " .. trPlayer)
+        self:Sync(syncName.mc .. " " .. UnitName("Player"))
+    elseif string.find(msg, L["trigger_mcOther"]) then
+        local _,_, mcPlayer,_ = string.find(msg, L["trigger_mcOther"])
+        self:Sync(syncName.mc .. " " .. mcPlayer)
+    elseif string.find(msg, L["trigger_mcFade"]) then
+        local _,_, mcFadePlayer,_ = string.find(msg, L["trigger_mcFade"])
+        if mcFadePlayer == "you" then mcFadePlayer = UnitName("Player") end
+        self:Sync(syncName.mc .. " " .. mcFadePlayer)
+    elseif string.find(msg, L["trigger_trample"]) then
+        local _,_, trPlayer,_ = string.find(msg, L["trigger_trample"])
+        self:Sync(syncName.trample .. " " .. trPlayer)
     elseif string.find(msg, L["trigger_fortify"]) and self.db.profile.fortify then
         self:Fortify()
+    elseif string.find(msg, L["trigger_invz"]) then
+        self:InVoidZone()
     end
 end
 
@@ -255,34 +260,40 @@ function module:BigWigs_RecvSync(sync, rest, nick)
     elseif sync == syncName.kingsfury and self.db.profile.kingsfury then
         self:Kingsfury()
     elseif sync == syncName.darksubservience and rest and self.db.profile.darksubservience then
-		self:DarkSubservience(rest)
-	elseif sync == syncName.darksubservienceFade and rest and self.db.profile.darksubservience then
-		self:DarkSubservienceFade(rest)
+        self:DarkSubservience(rest)
+    elseif sync == syncName.darksubservienceFade and rest and self.db.profile.darksubservience then
+        self:DarkSubservienceFade(rest)
     elseif sync == syncName.mc and rest and self.db.profile.charmingpresence then
-		self:CharmingPresence(rest)
-	elseif sync == syncName.mcFade and rest and self.db.profile.charmingpresence then
-		self:CharmingPresenceFade(rest)
+        self:CharmingPresence(rest)
+    elseif sync == syncName.mcFade and rest and self.db.profile.charmingpresence then
+        self:CharmingPresenceFade(rest)
     elseif sync == syncName.trample and rest and self.db.profile.trample then
-		self:Trample(rest)
+        self:Trample(rest)
     end
+end
+
+function module:InVoidZone()
+    self:Message(L["msg_invz"], "Urgent")
+    self:WarningSign(icon.circle, 3)
+    self:Sound("RunAway")
 end
 
 function module:KingsFury()
     self:Bar(L["kingsfury_bar"], timer.kingsfury, icon.kingsfury, true, color.kingsfury)
-	self:WarningSign(icon.kingsfury, timer.kingsfury)
-	self:Sound("RunAway")
+    self:WarningSign(icon.kingsfury, timer.kingsfury)
+    self:Sound("RunAway")
 end
 
 function module:DarkSubservience(rest)
-	if IsRaidLeader() then
+    if IsRaidLeader() then
         SendChatMessage(rest..L["bar_darksubservience"],"RAID_WARNING")
         --self:Bar(rest..L["bar_darksubservience"], timer.darksubservience, icon.darksubservience, true, color.darksubservience)
     end
-	if rest == UnitName("Player") then
+    if rest == UnitName("Player") then
         self:Bar(rest..L["bar_darksubservience"], timer.darksubservience, icon.darksubservience, true, color.darksubservience)
         SendChatMessage(UnitName("Player")..L["bar_darksubservience"],"SAY")
         self:Message(L["msg_darksubservienceYou"], "Urgent") --, false, nil, false)
-		self:WarningSign(icon.darksubservience, timer.darksubservience)
+        self:WarningSign(icon.darksubservience, timer.darksubservience)
         PlaySoundFile(L["soundbow"])
         self:Bar("> Click Me to Bow <", timer.darksubservience, icon.darksubservience, true, "White")
         self:SetCandyBarOnClick("BigWigsBar > Click Me to Bow <", function(name, button, extra) 
@@ -290,81 +301,82 @@ function module:DarkSubservience(rest)
                 DoEmote("bow")
                 DoEmote("kneel")
             end, "Queen")
-		--self:Sound("RunAway")
-	end
-	if (IsRaidLeader() or IsRaidOfficer()) then
-		for i=1,GetNumRaidMembers() do
-			if UnitName("raid"..i) == rest then
-				SetRaidTarget("raid"..i, 4)
-			end
-		end
-	end
+        --self:Sound("RunAway")
+    end
+    if (IsRaidLeader() or IsRaidOfficer()) then
+        for i=1,GetNumRaidMembers() do
+            if UnitName("raid"..i) == rest then
+                SetRaidTarget("raid"..i, 4)
+            end
+        end
+    end
 end
 
 function module:DarkSubservienceFade(rest)
-	self:RemoveBar(rest..L["bar_darksubservience"])
-	if (IsRaidLeader() or IsRaidOfficer()) then
-		for i=1,GetNumRaidMembers() do
-			if UnitName("raid"..i) == rest then
-				SetRaidTarget("raid"..i, 0)
-			end
-		end
-	end
+    self:RemoveBar(rest..L["bar_darksubservience"])
+    if (IsRaidLeader() or IsRaidOfficer()) then
+        for i=1,GetNumRaidMembers() do
+            if UnitName("raid"..i) == rest then
+                SetRaidTarget("raid"..i, 0)
+            end
+        end
+    end
 end
 
 function module:CharmingPresence(rest)
-	if IsRaidLeader() then
+    if IsRaidLeader() then
         SendChatMessage(rest..L["bar_mc"],"RAID_WARNING")
         --self:Bar(rest..L["bar_mc"], timer.mc, icon.mc, true, color.mc)
     end
-	if rest == UnitName("Player") then
+    if rest == UnitName("Player") then
         self:Bar(rest..L["bar_mc"], timer.mc, icon.mc, true, color.mc)
         SendChatMessage(UnitName("Player")..L["bar_mc"],"SAY")
         self:Message(L["msg_mcYou"], "Urgent") --, false, nil, false)
-		self:WarningSign(icon.mc, timer.mc)
-	end
-    self:Bar("> Click to target MC <", timer.mc, icon.mc, true, "White")
+        self:WarningSign(icon.mc, timer.mc)
+    end
+    self:Bar("> Click to target MC'd <", timer.mc, icon.mc, true, "White")
     self:SetCandyBarOnClick("BigWigsBar > Click to target MC'd <", function(name, button, extra) 
             TargetByName(extra, true) 
         end, rest)
     self:Sound("Beware")
-	if (IsRaidLeader() or IsRaidOfficer()) then
-		for i=1,GetNumRaidMembers() do
-			if UnitName("raid"..i) == rest then
-				SetRaidTarget("raid"..i, 8)
-			end
-		end
-	end
+    if (IsRaidLeader() or IsRaidOfficer()) then
+        for i=1,GetNumRaidMembers() do
+            if UnitName("raid"..i) == rest then
+                SetRaidTarget("raid"..i, 8)
+            end
+        end
+    end
 end
 
 function module:CharmingPresenceFade(rest)
-	self:RemoveBar(rest..L["bar_mc"])
-	if (IsRaidLeader() or IsRaidOfficer()) then
-		for i=1,GetNumRaidMembers() do
-			if UnitName("raid"..i) == rest then
-				SetRaidTarget("raid"..i, 0)
-			end
-		end
-	end
+    self:RemoveBar(rest..L["bar_mc"])
+    self:RemoveBar("> Click to target MC'd <")
+    if (IsRaidLeader() or IsRaidOfficer()) then
+        for i=1,GetNumRaidMembers() do
+            if UnitName("raid"..i) == rest then
+                SetRaidTarget("raid"..i, 0)
+            end
+        end
+    end
 end
 
 function module:Trample(rest)
-	if IsRaidLeader() or IsRaidOfficer() then
+    if IsRaidLeader() or IsRaidOfficer() then
         self:Message(L["msg_trampleone"]..rest..L["msg_trampletwo"], "Attention")
         self:Bar(L["msg_trampleone"]..rest, timer.trample, icon.trample, true, color.trample)
     end
-	if rest == UnitName("Player") then
+    if rest == UnitName("Player") then
         self:Bar(L["msg_trampleone"]..rest, timer.trample, icon.trample, true, color.trample)
-		self:WarningSign(icon.trample, timer.trample)
+        self:WarningSign(icon.trample, timer.trample)
         self:Sound("Beware")
-	end
-	if (IsRaidLeader() or IsRaidOfficer()) then
-		for i=1,GetNumRaidMembers() do
-			if UnitName("raid"..i) == rest then
-				SetRaidTarget("raid"..i, 4)
-			end
-		end
-	end
+    end
+    --if (IsRaidLeader() or IsRaidOfficer()) then
+    --    for i=1,GetNumRaidMembers() do
+    --        if UnitName("raid"..i) == rest then
+    --            SetRaidTarget("raid"..i, 4)
+    --        end
+    --    end
+    --end
 end
 
 function module:Fortify()    

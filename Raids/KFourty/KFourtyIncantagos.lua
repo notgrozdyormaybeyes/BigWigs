@@ -21,83 +21,83 @@ module.defaultDB = {
 }
 
 L:RegisterTranslations("enUS", function() return {
-	cmd = "Incantagos",
+    cmd = "Incantagos",
     
-	surge_cmd = "SurgeofMana",
-	surge_name = "Surge of Mana Alert",
-	surge_desc = "Warn for Surge of Mana",
+    surge_cmd = "SurgeofMana",
+    surge_name = "Surge of Mana Alert",
+    surge_desc = "Warn for Surge of Mana",
     
-	beam_cmd = "GuidedLey-Beam",
-	beam_name = "Guided-Ley Beam Alert",
-	beam_desc = "Warn for Guided-Ley Beam",
+    beam_cmd = "GuidedLey-Beam",
+    beam_name = "Guided-Ley Beam Alert",
+    beam_desc = "Warn for Guided-Ley Beam",
 
-	blizzard_cmd = "Blizzard",
-	blizzard_name = "Blizzard Alert",
-	blizzard_desc = "Warn for Blizzard",
-	
-	sumseeker_cmd = "SummonMana-LeySeeker",
-	sumseeker_name = "Summon Mana-Ley Seeker Alert",
-	sumseeker_desc = "Warn for Summon Mana-Ley Seeker",
-	
-	sumwhelps_cmd = "SummonManascaleWhelps",
-	sumwhelps_name = "Summon Manascale Whelps Alert",
-	sumwhelps_desc = "Warn for Summon Manascale Whelps",
+    blizzard_cmd = "Blizzard",
+    blizzard_name = "Blizzard Alert",
+    blizzard_desc = "Warn for Blizzard",
     
-	affinity_cmd = "Ley-LineDisturbance",
-	affinity_name = "Ley-Line Disturbance Alert",
-	affinity_desc = "Warn for Ley-Line Disturbance",
+    sumseeker_cmd = "SummonMana-LeySeeker",
+    sumseeker_name = "Summon Mana-Ley Seeker Alert",
+    sumseeker_desc = "Warn for Summon Mana-Ley Seeker",
+    
+    sumwhelps_cmd = "SummonManascaleWhelps",
+    sumwhelps_name = "Summon Manascale Whelps Alert",
+    sumwhelps_desc = "Warn for Summon Manascale Whelps",
+    
+    affinity_cmd = "Ley-LineDisturbance",
+    affinity_name = "Ley-Line Disturbance Alert",
+    affinity_desc = "Warn for Ley-Line Disturbance",
 
-	curse_cmd = "CurseofManascale",
-	curse_name = "Curse of Manascale Alert",
-	curse_desc = "Warns for Curse of Manascale",
+    curse_cmd = "CurseofManascale",
+    curse_name = "Curse of Manascale Alert",
+    curse_desc = "Warns for Curse of Manascale",
     
-	autotarget_cmd = "autotarget",
-	autotarget_name = "Auto-Target the affinity",
-	autotarget_desc = "Targets the affinity automatically upon summon",
-	
+    autotarget_cmd = "autotarget",
+    autotarget_name = "Auto-Target the affinity",
+    autotarget_desc = "Targets the affinity automatically upon summon",
+    
     msg_curse = "Incantagos is close to 40%! Prepare Restorative Potion for curse phase!",
     msg_curse_cast = "Curse being casted! Prepare Restorative Potion!",
-	
+    
     trigger_surge = "You are afflicted by Surge of Mana", --CHAT_MSG_SPELL_PERIODIC_SELF_DAMAGE
     trigger_surgefade = "Surge of Mana fades from you.", --CHAT_MSG_SPELL_AURA_GONE_SELF
     msg_surge = "Surge of Mana on You! Use Blink, Iceblock, Bubble, Shapeshift, Freedom, LAP!",
     
-	trigger_beam = "gains Guided Ley-Beam", --CHAT_MSG_SPELL_PERIODIC_FRIENDLYPLAYER_DAMAGE
+    trigger_beam = "gains Guided Ley-Beam", --CHAT_MSG_SPELL_PERIODIC_FRIENDLYPLAYER_DAMAGE
     trigger_inbeam = "You are afflicted by Guided Ley-Beam", --CHAT_MSG_SPELL_PERIODIC_SELF_DAMAGE
     trigger_inbeamfade = "Guided Ley-Beam fades from you.", --CHAT_MSG_SPELL_AURA_GONE_SELF
-	bar_beam = "Guided-Ley Beam soon!",
-	msg_beam = "Guided-Ley Beam on YOU! Move!",
-	
-	trigger_blizz = "You are afflicted by Blizzard", --CHAT_MSG_SPELL_PERIODIC_SELF_DAMAGE
+    bar_beam = "Guided-Ley Beam soon!",
+    msg_beam = "Guided-Ley Beam on YOU! Move!",
+    
+    trigger_blizz = "You are afflicted by Blizzard", --CHAT_MSG_SPELL_PERIODIC_SELF_DAMAGE
     trigger_blizzfade = "Blizzard fades from you.", --CHAT_MSG_SPELL_AURA_GONE_SELF
-	msg_blizz = "Blizzard on YOU! Move!",
-	
-	trigger_seeker = "Ley-Watcher Incantagos begins to cast Summon Manascale Ley-Seeker.", --CHAT_MSG_SPELL_CREATURE_VS_CREATURE_DAMAGE
-	bar_seeker = "Next Seeker",
-	msg_seeker = "Manascale Ley-Seeker! Boss takes 25% reduced damage!",
-	
-	trigger_whelps = "Ley-Watcher Incantagos begins to cast Summon Manascale Whelps.", --CHAT_MSG_SPELL_CREATURE_VS_CREATURE_DAMAGE
-	bar_whelps = "Next Whelps",
-	msg_whelps = "Many whelps! Handle it!",
-	
-	trigger_aff = "Ley-Watcher Incantagos begins to cast Ley-Line Disturbance.", --CHAT_MSG_SPELL_CREATURE_VS_CREATURE_DAMAGE
-	bar_aff = "Next Affinity",
+    msg_blizz = "Blizzard on YOU! Move!",
+    
+    trigger_seeker = "Ley-Watcher Incantagos begins to cast Summon Manascale Ley-Seeker.", --CHAT_MSG_SPELL_CREATURE_VS_CREATURE_DAMAGE
+    bar_seeker = "Next Seeker",
+    msg_seeker = "Manascale Ley-Seeker! Boss takes 25% reduced damage!",
+    
+    trigger_whelps = "Ley-Watcher Incantagos begins to cast Summon Manascale Whelps.", --CHAT_MSG_SPELL_CREATURE_VS_CREATURE_DAMAGE
+    bar_whelps = "Next Whelps",
+    msg_whelps = "Many whelps! Handle it!",
+    
+    trigger_aff = "Ley-Watcher Incantagos begins to cast Ley-Line Disturbance.", --CHAT_MSG_SPELL_CREATURE_VS_CREATURE_DAMAGE
+    bar_aff = "Next Affinity",
     trigger_affgainone = "You gain ", --CHAT_MSG_SPELL_PERIODIC_SELF_DAMAGE
     trigger_affgaintwo = " Affinity", --CHAT_MSG_SPELL_PERIODIC_SELF_DAMAGE
     trigger_red = "You gain Red Affinity", --CHAT_MSG_SPELL_PERIODIC_SELF_DAMAGE
-	msg_redaff = "Red Affinity! Use Fire damage",
+    msg_redaff = "Red Affinity! Use Fire damage",
     trigger_blue = "You gain Blue Affinity", --CHAT_MSG_SPELL_PERIODIC_SELF_DAMAGE
-	msg_blueaff = "Blue Affinity! Use Frost damage",
+    msg_blueaff = "Blue Affinity! Use Frost damage",
     trigger_mana = "You gain Mana Affinity", --CHAT_MSG_SPELL_PERIODIC_SELF_DAMAGE
-	msg_manaaff = "Mana Affinity! Use Arcane damage",
+    msg_manaaff = "Mana Affinity! Use Arcane damage",
     trigger_green = "You gain Green Affinity", --CHAT_MSG_SPELL_PERIODIC_SELF_DAMAGE
-	msg_greenaff = "Green Affinity! Use Nature damage",
+    msg_greenaff = "Green Affinity! Use Nature damage",
     trigger_black = "You gain Black Affinity", --CHAT_MSG_SPELL_PERIODIC_SELF_DAMAGE
-	msg_blackaff = "Black Affinity! Use Shadow damage",
+    msg_blackaff = "Black Affinity! Use Shadow damage",
     trigger_crystal = "You gain Crystal Affinity", --CHAT_MSG_SPELL_PERIODIC_SELF_DAMAGE
-	msg_crystalaff = "Crystal Affinity! Use Physical damage",
-	
-	trigger_engage = "Do you think you can disturb our purpose here?",--CHAT_MSG_MONSTER_YELL
+    msg_crystalaff = "Crystal Affinity! Use Physical damage",
+    
+    trigger_engage = "Do you think you can disturb our purpose here?",--CHAT_MSG_MONSTER_YELL
     trigger_bossDead = "Malygos... I have failed you.", --CHAT_MSG_MONSTER_YELL
 } end )
 
@@ -108,27 +108,27 @@ local seeker_id = 51178
 local disturbance_id = 51185
 local curse_id = 51186
 local curse_warned = false
-local lowHp = nil
+local lowHp = 0
 local healthPct = 100
 
 
 local timer = {
-	beamcast = 3,
-	firstsumseeker = 75,
-	seekercast = 2,
+    beamcast = 3,
+    firstsumseeker = 75,
+    seekercast = 2,
     whelpscast = 2,
-	firstaffinity = 78,
+    firstaffinity = 78,
     affinitycd = 55,
     affinitykill = 15,
     affinitycast = 3,
 }
 local icon = {
     surge = "Spell_Shadow_SiphonMana",
-	beam = "Spell_Nature_CallStorm",
-	blizzard = "Spell_Frost_IceStorm",
-	sumseeker = "INV_Misc_Head_Dragon_Blue",
-	sumwhelps = "INV_Misc_Head_Dragon_Black",
-	affinity = "Spell_Nature_AstralRecalGroup",
+    beam = "Spell_Arcane_StarFire",
+    blizzard = "Spell_Frost_IceStorm",
+    sumseeker = "INV_Misc_Head_Dragon_Blue",
+    sumwhelps = "INV_Misc_Head_Dragon_Black",
+    affinity = "Spell_Nature_AstralRecalGroup",
     aff_red = "Spell_Fire_FlameBolt",
     aff_blue = "Spell_Frost_FrostBolt02",
     aff_mana = "Spell_Arcane_StarFire",
@@ -137,61 +137,53 @@ local icon = {
     aff_crystal = "INV_Axe_11",
 }
 local color = {
-	beam = "Blue",
-	blizzard = "Blue",
-	sumseeker = "Black",
-	sumwhelps = "White",
-	affinity = "Red",
-	curse = "Purple",
+    beam = "Blue",
+    blizzard = "Blue",
+    sumseeker = "Black",
+    sumwhelps = "White",
+    affinity = "Red",
+    curse = "Purple",
 }
 local syncName = {
     bossguid = "BossGuid"..module.revision,
-    surge = "SurgeOfMana"..module.revision,
-    surgefade = "SurgeOfManaFade"..module.revision,
-	beam = "Beam"..module.revision,
-	beamfade = "BeamFade"..module.revision,
     whelps = "SummonWhelps"..module.revision,
     seeker = "SummonSeeker"..module.revision,
     disturbance = "LeyLineDisturbance"..module.revision,
     curse = "CurseOfManascale"..module.revision,
-	lowHp = "Ley-WatcherIncantagos"..module.revision,
+    lowHp = "Ley-WatcherIncantagos"..module.revision,
 }
 
 module:RegisterYellEngage(L["trigger_engage"])
 
 function module:OnEnable()
-	self:RegisterEvent("CHAT_MSG_MONSTER_YELL") --trigger_engage, bossDead
-	self:RegisterEvent("CHAT_MSG_SPELL_CREATURE_VS_CREATURE_DAMAGE", "Event") --trigger_seeker, whelps, aff
-	self:RegisterEvent("CHAT_MSG_SPELL_CREATURE_VS_SELF_BUFF", "Event") 
-	self:RegisterEvent("CHAT_MSG_SPELL_PERIODIC_CREATURE_BUFFS", "Event") 
-	self:RegisterEvent("CHAT_MSG_SPELL_CREATURE_VS_SELF_BUFF", "Event") 
-	self:RegisterEvent("CHAT_MSG_SPELL_PERIODIC_FRIENDLYPLAYER_BUFFS", "Event") 
-	self:RegisterEvent("CHAT_MSG_SPELL_PERIODIC_PARTY_BUFFS", "Event") 
-	self:RegisterEvent("CHAT_MSG_SPELL_PERIODIC_SELF_BUFFS", "Event") 
-	self:RegisterEvent("CHAT_MSG_SPELL_PERIODIC_SELF_DAMAGE", "Event") --trigger_inbeam, blizz, surge, aff color
-	self:RegisterEvent("CHAT_MSG_SPELL_PERIODIC_PARTY_DAMAGE", "Event") 
-	self:RegisterEvent("CHAT_MSG_SPELL_PERIODIC_FRIENDLYPLAYER_DAMAGE", "Event") --trigger_beam
-	self:RegisterEvent("CHAT_MSG_SPELL_AURA_GONE_SELF") --trigger_inbeamfade, blizzfade, surgefade
-	self:RegisterEvent("UNIT_HEALTH") --lowHp
-	
+    self:RegisterEvent("CHAT_MSG_MONSTER_YELL") --trigger_engage, bossDead
+    self:RegisterEvent("CHAT_MSG_SPELL_CREATURE_VS_CREATURE_DAMAGE", "Event") --trigger_seeker, whelps, aff
+    self:RegisterEvent("CHAT_MSG_SPELL_CREATURE_VS_SELF_BUFF", "Event") 
+    self:RegisterEvent("CHAT_MSG_SPELL_PERIODIC_CREATURE_BUFFS", "Event") 
+    self:RegisterEvent("CHAT_MSG_SPELL_CREATURE_VS_SELF_BUFF", "Event") 
+    self:RegisterEvent("CHAT_MSG_SPELL_PERIODIC_FRIENDLYPLAYER_BUFFS", "Event") 
+    self:RegisterEvent("CHAT_MSG_SPELL_PERIODIC_PARTY_BUFFS", "Event") 
+    self:RegisterEvent("CHAT_MSG_SPELL_PERIODIC_SELF_BUFFS", "Event") 
+    self:RegisterEvent("CHAT_MSG_SPELL_PERIODIC_SELF_DAMAGE", "Event") --trigger_inbeam, blizz, surge, aff color
+    self:RegisterEvent("CHAT_MSG_SPELL_PERIODIC_PARTY_DAMAGE", "Event") 
+    self:RegisterEvent("CHAT_MSG_SPELL_PERIODIC_FRIENDLYPLAYER_DAMAGE", "Event") --trigger_beam
+    self:RegisterEvent("CHAT_MSG_SPELL_AURA_GONE_SELF", "Event") --trigger_inbeamfade, blizzfade, surgefade
+    self:RegisterEvent("UNIT_HEALTH") --lowHp
+    
     if SUPERWOW_VERSION then -- check if SuperWoW is used. if not, pray that someone has it to sync with you :)
         self:RegisterEvent("UNIT_CASTEVENT", "CastEvent")
     end
     
-	self:ThrottleSync(20, syncName.bossguid)
-	self:ThrottleSync(3, syncName.surge)
-	self:ThrottleSync(3, syncName.surgefade)
-	self:ThrottleSync(3, syncName.beam)
-	self:ThrottleSync(3, syncName.beamfade)
-	self:ThrottleSync(3, syncName.whelps)
-	self:ThrottleSync(3, syncName.seeker)
-	self:ThrottleSync(3, syncName.disturbance)
-	self:ThrottleSync(3, syncName.curse)
-	self:ThrottleSync(3, syncName.lowHp)
+    self:ThrottleSync(20, syncName.bossguid)
+    self:ThrottleSync(3, syncName.whelps)
+    self:ThrottleSync(3, syncName.seeker)
+    self:ThrottleSync(3, syncName.disturbance)
+    self:ThrottleSync(3, syncName.curse)
+    self:ThrottleSync(60, syncName.lowHp)
 end
 
 function module:OnSetup()
-	self.started = nil
+    self.started = nil
 end
 
 function module:OnEngage()
@@ -201,11 +193,11 @@ function module:OnEngage()
         self:Sync(syncName.bossguid.." "..boss_guid)
         TargetLastTarget()
     end
-	if self.db.profile.sumseeker then
-		self:Bar(L["bar_seeker"], timer.firstsumseeker, icon.sumseeker, true, color.sumseeker)
+    if self.db.profile.sumseeker then
+        self:Bar(L["bar_seeker"], timer.firstsumseeker, icon.sumseeker, true, color.sumseeker)
     end
-	if self.db.profile.affinity then
-		self:Bar(L["bar_aff"], timer.firstaffinity, icon.affinity, true, color.affinity)
+    if self.db.profile.affinity then
+        self:Bar(L["bar_aff"], timer.firstaffinity, icon.affinity, true, color.affinity)
     end
 end
 
@@ -213,26 +205,23 @@ function module:OnDisengage()
 end
 
 function module:CHAT_MSG_MONSTER_YELL(msg)
-	if msg == L["trigger_engage"] then
-		module:SendEngageSync()
-	end
+    if msg == L["trigger_engage"] then
+        module:SendEngageSync()
+    end
 end
 
 function module:UNIT_HEALTH(msg)
-	if UnitName(msg) == "Ley-Watcher Incantagos" then
-		healthPct = UnitHealth(msg) * 100 / UnitHealthMax(msg)
-		if healthPct > 43 and lowHp ~= nil then
-			lowHp = nil
-		elseif healthPct <= 43 and lowHp == nil then
-			self:Sync(syncName.lowHp)
-        elseif healthPct <= 41 and lowHp ~= nil then
-			lowHp = nil
-		end
-	end
+    if UnitName(msg) == "Ley-Watcher Incantagos" then
+        healthPct = UnitHealth(msg) * 100 / UnitHealthMax(msg)
+        if healthPct <= 42
+        and lowHp == 0 then
+            self:Sync(syncName.lowHp)
+        end
+    end
 end
 
 function module:CastEvent(casterGuid, targetGuid, eventType, spellId, castTime)
-    if casterGuid == incantagos_guid then
+    if casterGuid == boss_guid then
         if eventType == "START" then 
         end
         if spellId == whelps_id and eventType == "START" then 
@@ -249,19 +238,17 @@ end
 
 function module:Event(msg)
     if string.find(msg, L["trigger_surge"]) and self.db.profile.surge then
-		self:Surge()
-    elseif string.find(msg, L["trigger_beam"]) then
-		self:Bar(L["bar_beam"], timer.beamcast, icon.beam, true, color.beam)
+        self:Surge()
     elseif string.find(msg, L["trigger_surgefade"]) and self.db.profile.surge then
-		self:SurgeFade()
+        self:SurgeFade()
     elseif string.find(msg, L["trigger_inbeam"]) and self.db.profile.beam then
-		self:Beam()
+        self:Beam()
     elseif string.find(msg, L["trigger_inbeamfade"]) and self.db.profile.beam then
-		self:BeamFade()
+        self:BeamFade()
     elseif string.find(msg, L["trigger_blizz"]) and self.db.profile.blizzard then
-		self:Blizzard()
+        self:Blizzard()
     elseif string.find(msg, L["trigger_blizzfade"]) and self.db.profile.blizzard then
-		self:BlizzardFade()
+        self:BlizzardFade()
     elseif string.find(msg, L["trigger_affgainone"]) and string.find(msg, L["trigger_affgaintwo"]) and self.db.profile.affinity then
         self:FindAffinity(msg)
     end
@@ -270,27 +257,26 @@ end
 
 
 function module:BigWigs_RecvSync(sync, rest, nick)
-	if sync == syncName.lowHp and self.db.profile.curse then
-		self:LowHp()
-	elseif sync == syncName.curse and self.db.profile.curse then
-		self:Curse()
+    if sync == syncName.lowHp and self.db.profile.curse then
+        self:LowHp()
+    elseif sync == syncName.curse and self.db.profile.curse then
+        self:Curse()
     elseif sync == syncName.seeker and self.db.profile.sumseeker then 
         self:Seeker()
     elseif sync == syncName.whelps and self.db.profile.sumwhelps then 
         self:Whelps()
     elseif sync == syncName.disturbance and self.db.profile.affinity then 
-		self:Bar(L["bar_aff"], timer.affinitycast, icon.affinity, true, color.affinity)
-		self:DelayedBar(timer.affinitycast, L["bar_aff"], timer.affinitycd - timer.affinitycast, icon.affinity, true, color.affinity)
-	end
+        self:Bar(L["bar_aff"], timer.affinitycast, icon.affinity, true, color.affinity)
+    end
 end
 
 function module:LowHp()
-	lowHp = true
+    lowHp = 1
     self:Message(L["msg_curse"], "Important", true, "Alert")
 end
 
 function module:Curse()
-    self:Message(L["msg_curse"], "Important", true, "Alert")
+    self:Message(L["msg_curse_cast"], "Important", true, "Alert")
     curse_warned = true
 end
 

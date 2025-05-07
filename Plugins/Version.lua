@@ -339,7 +339,7 @@ function BigWigsVersionQuery:OnTooltipUpdate()
 					color = COLOR_RED
 				end
 
-				cat:AddLine("text", name, "text2", "|cff" .. color .. "Pepo " .. version .. "|r")
+				cat:AddLine("text", name, "text2", "|cff" .. color .. "Baguette " .. version .. "|r")
 			else
 				cat:AddLine("text", name, "text2", "|cff" .. color .. version .. "|r")
 			end

@@ -14,8 +14,8 @@ module.defaultDB = {
     bomb = true,
     circle = true,
     dampening = true,
-    usepoticon = true,
-    usepotsound = true,
+    usepoticon = false,
+    usepotsound = false,
 }
 L:RegisterTranslations("enUS", function() return {
     cmd = "Anomalus",

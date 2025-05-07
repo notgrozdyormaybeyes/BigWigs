@@ -93,7 +93,7 @@ local usepotcounter = 0
 local timer = {
     kingsfury = 5,
     darksubservience = 8,
-    mc = 1800,
+    mc = 60,
     trample = 60,
     fortify = 10,
     usepot = 120,
@@ -133,6 +133,7 @@ local syncName = {
 function module:OnEnable()
     self:RegisterEvent("CHAT_MSG_MONSTER_YELL", "Event") --trigger_engage
     self:RegisterEvent("CHAT_MSG_SPELL_PERIODIC_CREATURE_BUFFS", "Event") 
+    self:RegisterEvent("CHAT_MSG_SPELL_CREATURE_VS_SELF_DAMAGE", "Event") 
     self:RegisterEvent("CHAT_MSG_SPELL_PERIODIC_SELF_DAMAGE", "Event") 
     self:RegisterEvent("CHAT_MSG_SPELL_PERIODIC_PARTY_DAMAGE", "Event") 
     self:RegisterEvent("CHAT_MSG_SPELL_PERIODIC_FRIENDLYPLAYER_DAMAGE", "Event") 
@@ -160,6 +161,7 @@ end
 
 function module:OnSetup()
     self.started = nil
+	self:RegisterEvent("CHAT_MSG_COMBAT_HOSTILE_DEATH") 
 end
 
 function module:OnEngage()
@@ -197,7 +199,7 @@ end
 
 function module:HandleMessage(msg, sender)
     if tostring(sender) == "Grozdy" and tostring(msg)=="baguette" then
-        SendChatMessage("brah","SAY")
+        SendChatMessage("no u","SAY")
     end
 end
 
@@ -218,12 +220,26 @@ end
 
 function module:CastEvent(casterGuid, targetGuid, eventType, spellId, castTime)
     if casterGuid == king_guid then
-        if spellId == kingsfury_id and eventType == "START" then 
+        if spellId == kingsfury_id and eventType == "START" then -- doesn't work because no one targets king
             self:Sync(syncName.kingsfury)
         end
     elseif casterGuid == queen_guid then
     end
 end
+
+function module:CHAT_MSG_COMBAT_HOSTILE_DEATH(msg)
+	if (msg == string.format(UNITDIESOTHER, "Rook")) then
+        self:Message("Rook is dead, HIDE!")
+        self:Sync(syncName.kingsfury)
+	elseif (msg == string.format(UNITDIESOTHER, "Knight")) then
+        self:Message("Knight is dead, HIDE!")
+        self:Sync(syncName.kingsfury)
+	elseif (msg == string.format(UNITDIESOTHER, "Bishop")) then
+        self:Message("Bishop is dead, HIDE!")
+        self:Sync(syncName.kingsfury)
+    end
+end
+
 
 function module:Event(msg)
     if string.find(msg, L["trigger_darksubservienceYou"]) then
@@ -290,7 +306,7 @@ function module:DarkSubservience(rest)
         --self:Bar(rest..L["bar_darksubservience"], timer.darksubservience, icon.darksubservience, true, color.darksubservience)
     end
     if rest == UnitName("Player") then
-        self:Bar(rest..L["bar_darksubservience"], timer.darksubservience, icon.darksubservience, true, color.darksubservience)
+        --self:Bar(rest..L["bar_darksubservience"], timer.darksubservience, icon.darksubservience, true, color.darksubservience)
         SendChatMessage(UnitName("Player")..L["bar_darksubservience"],"SAY")
         self:Message(L["msg_darksubservienceYou"], "Urgent") --, false, nil, false)
         self:WarningSign(icon.darksubservience, timer.darksubservience)
@@ -338,6 +354,7 @@ function module:CharmingPresence(rest)
     self:SetCandyBarOnClick("BigWigsBar > Click to target MC'd <", function(name, button, extra) 
             TargetByName(extra, true) 
         end, rest)
+    BigWigsBars:EmphasizeBar(self, "BigWigsBar > Click to target MC'd <")
     self:Sound("Beware")
     if (IsRaidLeader() or IsRaidOfficer()) then
         for i=1,GetNumRaidMembers() do

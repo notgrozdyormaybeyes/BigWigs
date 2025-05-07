@@ -222,14 +222,12 @@ end
 
 function module:CastEvent(casterGuid, targetGuid, eventType, spellId, castTime)
     if casterGuid == boss_guid then
-        if eventType == "START" then 
-        end
         if spellId == whelps_id and eventType == "START" then 
-            self:Sync(syncName.whelps)
+            self:Sync(syncName.whelps.." "..castTime)
         elseif spellId == seeker_id and eventType == "START" then 
-            self:Sync(syncName.seeker)
+            self:Sync(syncName.seeker.." "..castTime)
         elseif spellId == disturbance_id and eventType == "START" then 
-            self:Sync(syncName.disturbance)
+            self:Sync(syncName.disturbance.." "..castTime)
         elseif spellId == curse_id and curse_warned == false and eventType == "START" then 
             self:Sync(syncName.curse)
         end
@@ -262,11 +260,11 @@ function module:BigWigs_RecvSync(sync, rest, nick)
     elseif sync == syncName.curse and self.db.profile.curse then
         self:Curse()
     elseif sync == syncName.seeker and self.db.profile.sumseeker then 
-        self:Seeker()
+        self:Seeker(rest)
     elseif sync == syncName.whelps and self.db.profile.sumwhelps then 
-        self:Whelps()
+        self:Whelps(rest)
     elseif sync == syncName.disturbance and self.db.profile.affinity then 
-        self:Bar(L["bar_aff"], timer.affinitycast, icon.affinity, true, color.affinity)
+        self:Disturbance(rest)
     end
 end
 
@@ -310,16 +308,26 @@ function module:BlizzardFade()
     self:RemoveWarningSign(icon.blizzard)
 end
 
-function module:Seeker()
-    self:Bar(L["bar_seeker"], timer.seekercast, icon.sumseeker, true, color.sumseeker)
-    self:DelayedMessage(timer.seekercast, L["msg_seeker"], "Urgent", true, "Alert")
+function module:Seeker(rest)
+    local casttime = tonumber(rest)/1000
+    if casttime == nil or casttime <= timer.seekercast then casttime = timer.seekercast end
+    self:Bar(L["bar_seeker"], timer.casttime, icon.sumseeker, true, color.sumseeker)
+    self:DelayedMessage(timer.casttime, L["msg_seeker"], "Urgent", true, "Alert")
 end
 
-function module:Whelps()
-    self:Bar(L["bar_whelps"], timer.whelpscast, icon.whelps, true, color.whelps)
-    self:DelayedMessage(timer.whelpscast, L["msg_whelps"], "Attention", true, "Alert")
+function module:Whelps(rest)
+    local casttime = tonumber(rest)/1000
+    if casttime == nil or casttime <= timer.whelpscast then casttime = timer.whelpscast end
+    self:Bar(L["bar_whelps"], timer.casttime, icon.whelps, true, color.whelps)
+    self:DelayedMessage(timer.casttime, L["msg_whelps"], "Attention", true, "Alert")
 end
 
+function module:Disturbance(rest)
+    local casttime = tonumber(rest)/1000
+    if casttime == nil or casttime <= timer.affinitycast then casttime = timer.affinitycast end
+    self:Bar(L["bar_aff"], timer.casttime, icon.affinity, true, color.affinity)
+end
+        
 function module:FindAffinity(msg)
     if string.find(msg, L["trigger_red"]) then
         self:Message(L["msg_redaff"], "Urgent", true, "Alert")

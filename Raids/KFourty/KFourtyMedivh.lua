@@ -3,7 +3,7 @@ local module, L = BigWigs:ModuleDeclaration("Echo of Medivh", "Karazhan")
 
 module.revision = 30020
 module.enabletrigger = module.translatedName
-module.toggleoptions = {"gaze", "pyro", "frostnova", "arcaneblast", "flamestrike", "frostbolt", "shadowbolt", "switchflame_to_shadow", "corruption", "doom", "infernal", "proximity", "usepoticon", "usepotsound", "bosskill"}
+module.toggleoptions = {"gaze", "pyro", "frostnova", "arcaneblast", "flamestrike", "frostbolt", "shadowbolt", "switchnova_to_shadow", "switchflame_to_shadow", "corruption", "doom", "infernal", "proximity", "autorestodrop", "usepoticon", "usepotsound", "bosskill"}
 module.zonename = {
     AceLibrary("AceLocale-2.2"):new("BigWigs")["Tower of Karazhan"],
     AceLibrary("Babble-Zone-2.2")["Tower of Karazhan"],
@@ -17,13 +17,15 @@ module.defaultDB = {
     flamestrike = false,
     frostbolt = false,
     shadowbolt = false,
-    switchflame_to_shadow = true,
+    switchnova_to_shadow = false,
+    switchflame_to_shadow = false,
     corruption = true,
     doom = false,
     infernal = false,
     proximity = true, 
-    usepoticon = true,
-    usepotsound = true,
+    autorestodrop = true,
+    usepoticon = false,
+    usepotsound = false,
 }
 L:RegisterTranslations("enUS", function() return {
     cmd = "Medivh",
@@ -56,8 +58,12 @@ L:RegisterTranslations("enUS", function() return {
     shadowbolt_name = "Shadowbolt Alert",
     shadowbolt_desc = "Warn for Shadowbolt",
     
+    switchnova_to_shadow_cmd = "SwitchNovaToShadowbolt",
+    switchnova_to_shadow_name = "Switch Frost Nova To Shadowbolt",
+    switchnova_to_shadow_desc = "Warn for Shadowbolt instead of Frost Nova below 50 percent",
+    
     switchflame_to_shadow_cmd = "SwitchFlameToShadowbolt",
-    switchflame_to_shadow_name = "Switch Flamestrike To Shadowbolt Alert",
+    switchflame_to_shadow_name = "Switch Flamestrike To Shadowbolt",
     switchflame_to_shadow_desc = "Warn for Shadowbolt instead of Flamestrike below 50 percent",
     
     corruption_cmd = "Corruption",
@@ -75,6 +81,10 @@ L:RegisterTranslations("enUS", function() return {
     proximity_cmd = "Proximity",
     proximity_name = "Proximity Alert",
     proximity_desc = "Warning frame for Proximity",
+    
+    autorestodrop_cmd = "AutoRestoDrop",
+    autorestodrop_name = "Auto Restorative Potion Drop",
+    autorestodrop_desc = "Automatically drops Restorative Potion buff after 6 seconds",
     
     usepoticon_cmd = "UsePotionIcon",
     usepoticon_name = "Use GSPP icon Alert",
@@ -98,6 +108,7 @@ L:RegisterTranslations("enUS", function() return {
     trigger_corruptionOther = "(.+) is afflicted by Corruption of Medivh",  --CHAT_MSG_SPELL_PERIODIC_PARTY_DAMAGE // CHAT_MSG_SPELL_PERIODIC_FRIENDLYPLAYER_DAMAGE
     trigger_corruptionFade = "Corruption of Medivh fades from (.+).", --CHAT_MSG_SPELL_AURA_GONE_SELF // CHAT_MSG_SPELL_AURA_GONE_PARTY // CHAT_MSG_SPELL_AURA_GONE_OTHER
     bar_corruption = " is Corrupted!",
+    bar_corruptionSecond = "Corruption ends in",
     msg_corruptionYou = "You are Corrupted! Move away from your friends!",
     soundcorrupYou = "Interface\\Addons\\BigWigs\\Sounds\\corruption.mp3",
     
@@ -108,6 +119,10 @@ L:RegisterTranslations("enUS", function() return {
     
     msg_usepot = "Use GSPP",
     soundgspp = "Interface\\Addons\\BigWigs\\Sounds\\shadowpot.wav",
+    
+    trigger_fourdoom = "You are afflicted by Doom of Medivh (4)",
+    msg_fourdoom = "Use Restorative Potion!",
+    trigger_restopot = "You gain Restoration", 
     
     trigger_engage = "My patience has come to an end. You will not leave this tower alive.",--CHAT_MSG_MONSTER_YELL
     trigger_bossDead = "Your resistance is futile.",
@@ -127,6 +142,7 @@ local corruption_id = 52674
 local doom_id = 40004 -- also 40005 & 40006
 local lowHp = 0
 local healthPct = 100
+local stop_nova = false
 local stop_flamestrike = false
 
 local raidmembers  = {}
@@ -139,11 +155,13 @@ local timer = {
     frostbolt = 1.6, 
     shadowbolt = 2, 
     corruption = 6,
+    corruption_total = 12,
     doom = 5,
     infernal = 5,
     usepot = 120,
     usepotsound_pre = 2,
     usepoticon = 10,
+    resto_pot = 30,
 }
 local icon = {
     pyro = "spell_fire_fireball02",
@@ -157,6 +175,7 @@ local icon = {
     infernal = "Spell_Shadow_SummonInfernal",
     circle = "INV_Jewelry_Ring_03",
     usepot = "spell_shadow_abominationexplosion", 
+    resto_pot = "Spell_Holy_DispelMagic",
 }
 local color = {
     pyro = "Red",
@@ -168,6 +187,7 @@ local color = {
     corruption = "Cyan",
     circle = "Purple",
     usepot = "Black",
+    resto_pot = "White",
 }
 local syncName = {
     bossguid = "BossGuid"..module.revision,
@@ -192,6 +212,7 @@ function module:OnEnable()
     self:RegisterEvent("CHAT_MSG_SPELL_PERIODIC_SELF_DAMAGE", "Event") 
     self:RegisterEvent("CHAT_MSG_SPELL_PERIODIC_PARTY_DAMAGE", "Event") 
     self:RegisterEvent("CHAT_MSG_SPELL_PERIODIC_FRIENDLYPLAYER_DAMAGE", "Event") 
+    self:RegisterEvent("CHAT_MSG_SPELL_PERIODIC_SELF_BUFFS", "Event") 
     self:RegisterEvent("CHAT_MSG_SPELL_AURA_GONE_SELF", "Event") 
     self:RegisterEvent("CHAT_MSG_SPELL_AURA_GONE_PARTY", "Event") 
     self:RegisterEvent("CHAT_MSG_SPELL_AURA_GONE_OTHER", "Event") 
@@ -202,15 +223,14 @@ function module:OnEnable()
     end
     
     self:ThrottleSync(20, syncName.bossguid)
-    self:ThrottleSync(5, syncName.pyro)
-    self:ThrottleSync(5, syncName.frostnova)
-    self:ThrottleSync(5, syncName.arcaneblast)
-    self:ThrottleSync(5, syncName.flamestrike)
-    self:ThrottleSync(5, syncName.frostbolt)
-    self:ThrottleSync(5, syncName.shadowbolt)
+    self:ThrottleSync(3, syncName.pyro)
+    self:ThrottleSync(3, syncName.frostnova)
+    self:ThrottleSync(3, syncName.arcaneblast)
+    self:ThrottleSync(3, syncName.flamestrike)
+    self:ThrottleSync(3, syncName.frostbolt)
+    self:ThrottleSync(3, syncName.shadowbolt)
     self:ThrottleSync(3, syncName.corruption)
     self:ThrottleSync(3, syncName.corruptionFade)
-    
     
 end
 
@@ -223,18 +243,18 @@ function module:OnEngage()
         TargetByName("Echo of Medivh", true) --enUS hardcoded... should use L["bossname"]
         local _, medivh_guid = UnitExists("target")
         self:Sync(syncName.bossguid.." "..medivh_guid)
-        TargetLastTarget()
+        --TargetLastTarget()
         local _, self_guid = UnitExists("player")
     end
     
-    if UnitName("player") == "Grozdy" then
-        for i=1,GetNumRaidMembers() do
-            TargetByName(UnitName("raid"..i), true)
-            local _, member_guid = UnitExists("target")
-            raidmembers[member_guid] = UnitName("raid"..i)
-            TargetLastTarget()
-        end
-    end
+    --if UnitName("player") == "Grozdy" then
+    --    for i=1,GetNumRaidMembers() do
+    --        TargetByName(UnitName("raid"..i), true)
+    --        local _, member_guid = UnitExists("target")
+    --        raidmembers[member_guid] = UnitName("raid"..i)
+    --    end
+    --    TargetByName("Echo of Medivh", true)
+    --end
     
     if self.db.profile.proximity then
         self.Proximity(module)
@@ -248,6 +268,7 @@ function module:OnEngage()
             self:ScheduleRepeatingEvent("bwUsepotsound", function() self:UsePotSound() end, timer.usepot)
         end, timer.usepot)
     end
+    stop_nova = false
     stop_flamestrike = false
 end
 
@@ -265,9 +286,6 @@ end
 
 function module:CastEvent(casterGuid, targetGuid, eventType, spellId, castTime)
     if casterGuid == medivh_guid then
-        if eventType == "START" then 
-            --print(casterGuid.." "..targetGuid.." "..eventType.." "..spellId.." "..castTime)
-        end
         if spellId == pyro_id and eventType == "START" then 
             self:Sync(syncName.pyro.." "..castTime)
         elseif spellId == frostnova_id and eventType == "START" then 
@@ -280,6 +298,34 @@ function module:CastEvent(casterGuid, targetGuid, eventType, spellId, castTime)
             self:Sync(syncName.frostbolt.." "..castTime)
         elseif spellId == shadowbolt_id and eventType == "START" then 
             self:Sync(syncName.shadowbolt.." "..castTime)
+        end
+    elseif casterGuid == self_guid then
+        if spellId == 2139 and eventType == "START" then --counterspell
+            SendChatMessage(UnitName("Player").." used Counterspell, and I am not Catrii!","SAY")
+        elseif spellId == 15487 and eventType == "START" then --silence
+            SendChatMessage(UnitName("Player").." used Silence, and I am not Catrii!","SAY")
+        elseif spellId == 8042 and eventType == "START" then --earthshock
+            SendChatMessage(UnitName("Player").." used Earth Shock, and I am not Catrii!","SAY")
+        elseif spellId == 8044 and eventType == "START" then --earthshock
+            SendChatMessage(UnitName("Player").." used Earth Shock, and I am not Catrii!","SAY")
+        elseif spellId == 8045 and eventType == "START" then --earthshock
+            SendChatMessage(UnitName("Player").." used Earth Shock, and I am not Catrii!","SAY")
+        elseif spellId == 8046 and eventType == "START" then --earthshock
+            SendChatMessage(UnitName("Player").." used Earth Shock, and I am not Catrii!","SAY")
+        elseif spellId == 10412 and eventType == "START" then --earthshock
+            SendChatMessage(UnitName("Player").." used Earth Shock, and I am not Catrii!","SAY")
+        elseif spellId == 10413 and eventType == "START" then --earthshock
+            SendChatMessage(UnitName("Player").." used Earth Shock, and I am not Catrii!","SAY")
+        elseif spellId == 10414 and eventType == "START" then --earthshock
+            SendChatMessage(UnitName("Player").." used Earth Shock, and I am not Catrii!","SAY")
+        elseif spellId == 72 and eventType == "START" then --shield bash
+            SendChatMessage(UnitName("Player").." used Shield Bash, and I am not Catrii!","SAY")
+        elseif spellId == 1671 and eventType == "START" then --shield bash
+            SendChatMessage(UnitName("Player").." used Shield Bash, and I am not Catrii!","SAY")
+        elseif spellId == 1672 and eventType == "START" then --shield bash
+            SendChatMessage(UnitName("Player").." used Shield Bash, and I am not Catrii!","SAY")
+        elseif spellId == 6552 and eventType == "START" and UnitName("Player") ~= "Siarut" then --Pummel
+            SendChatMessage(UnitName("Player").." used Pummel, and I am not Catrii or Siarut!","SAY")
         end
     end
 end
@@ -305,6 +351,9 @@ function module:UNIT_HEALTH(msg)
             if switchflame_to_shadow and stop_flamestrike == false then
                 stop_flamestrike = true
             end
+            if switchnova_to_shadow and stop_nova == false then
+                stop_nova = true
+            end
         elseif lowHp == 2 and healthPct < 24 then
             if self.db.profile.infernal then
                 self:Message(L["msg_infernal"], "Attention")
@@ -329,6 +378,10 @@ function module:Event(msg)
         self:DoomOfMedivh()
     elseif string.find(msg, L["trigger_inflames"]) then
         self:InFlamestrike()
+    elseif string.find(msg, L["trigger_fourdoom"]) and self.db.profile.autorestodrop then
+        self:CallToRestoPot()
+    elseif string.find(msg, L["trigger_restopot"]) and self.db.profile.autorestodrop then
+        self:CancelRestoAura()
     end
 end
 
@@ -338,7 +391,9 @@ function module:BigWigs_RecvSync(sync, rest, nick)
     elseif sync == syncName.pyro and self.db.profile.pyro then
         self:Pyro(rest)
     elseif sync == syncName.frostnova and self.db.profile.frostnova then
-        self:FrostNova(rest)
+        if stop_nova == false then 
+            self:FrostNova(rest)
+        end
     elseif sync == syncName.arcaneblast and self.db.profile.arcaneblast then
         self:ArcaneBlast(rest)
     elseif sync == syncName.flamestrike and self.db.profile.flamestrike then
@@ -354,6 +409,16 @@ function module:BigWigs_RecvSync(sync, rest, nick)
     elseif sync == syncName.corruptionFade and rest and self.db.profile.corruption then
         self:CorruptionFade(rest)
     end
+end
+
+function module:RemoveCastbars()
+    -- removes pyro/frostnova/arcaneblast/flamestrike/shadowbolt/frostbolt castbars when he starts casting another spell
+    self:RemoveBar(L["pyro_bar"])
+    self:RemoveBar(L["frostnova_bar"])
+    self:RemoveBar(L["arcaneblast_bar"])
+    self:RemoveBar(L["flamestrike_bar"])
+    self:RemoveBar(L["frostbolt_bar"])
+    self:RemoveBar(L["shadowbolt_bar"])
 end
 
 function module:Pyro(rest)
@@ -407,10 +472,11 @@ end
 function module:Corruption(rest)
     if IsRaidLeader() then
         SendChatMessage(rest.." is Corrupted!","RAID_WARNING")
-        self:Bar(rest..L["bar_corruption"], timer.corruption, icon.corruption, true, color.corruption)
+        --self:Bar(rest..L["bar_corruption"], timer.corruption, icon.corruption, true, color.corruption)
     end
-    if rest == UnitName("Player") then
+    if rest == UnitName("Player") then 
         self:Bar(rest..L["bar_corruption"], timer.corruption, icon.corruption, true, color.corruption)
+        self:DelayedBar(timer.corruption, L["bar_corruptionSecond"], timer.corruption_total - timer.corruption, icon.corruption, true, color.corruption)
         SendChatMessage(UnitName("Player").." is Corrupted!","SAY")
         self:Message(L["msg_corruptionYou"], "Urgent") --, false, nil, false)
         self:WarningSign(icon.corruption, timer.corruption)
@@ -452,3 +518,24 @@ end
 function module:UsePotSound()
     PlaySoundFile(L["soundgspp"])
 end
+
+function module:CallToRestoPot()
+    self:Message(L["msg_fourdoom"], "Urgent")
+    self:WarningSign(icon.resto_pot, timer.resto_pot)
+end
+
+function module:CancelRestoAura()
+	self:RemoveWarningSign(icon.resto_pot)
+    self:ScheduleEvent("DropResto", function()
+        local h=1 
+        local i=0 
+        g=GetPlayerBuff 
+        while not (g(i) == -1) do 
+            if(strfind(GetPlayerBuffTexture(g(i)),icon.resto_pot)) then 
+                CancelPlayerBuff(g(i)) 
+            end 
+            i = i + 1 
+        end
+    end, 6)
+end
+

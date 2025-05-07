@@ -1,6 +1,6 @@
 ## Interface: 11200
 
-## Title: |cFFFF8080Pepopo|r Big Wigs |cff7fff7f30110|r |cffabd473Turtle-WoW|r
+## Title: |cFFFF8080Baguette|r Big Wigs |cff7fff7f30111|r |cffabd473Turtle-WoW|r
 ## Title-zhCN: |cffabd473Turtle-WoW|r Big Wigs
 ## Notes: Boss Mods with Timer bars.
 ## Notes-esES: Módulos para Jefes con barras temporizadoras.
@@ -8,7 +8,7 @@
 ## Notes-zhTW: 團隊首領戰訊息提示插件，帶有計時條。
 ## Author: Relar, Balake, Pepopo, Bethy, Tekkub Stoutwrithe, Ammo, Shyva, Rabbit, LYQ, Dorann, Hosq & Others
 ## Version: 2.0.0
-## X-Website: https://github.com/pepopo978/BigWigs/
+## X-Website: https://github.com/notgrozdyormaybeyes/BigWigs
 ## X-Category: Raid
 ## X-RelSite-WoWI: 5086
 ## X-RelSite-Curse: 4356

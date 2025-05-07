@@ -90,6 +90,8 @@ local darksubservience_id = 41647
 
 local usepotcounter = 0
 
+local raidmembers  = {}
+
 local timer = {
     kingsfury = 5,
     darksubservience = 8,
@@ -143,6 +145,11 @@ function module:OnEnable()
     self:RegisterEvent("PLAYER_REGEN_DISABLED", "HandleCombatStart")
     
     self:RegisterEvent("CHAT_MSG_SAY", "HandleMessage")
+    self:RegisterEvent("CHAT_MSG_RAID_LEADER", "HandleRaidLeadMessage")
+    
+    if UnitName("player") == "Kedarunzi" then
+        self:RegisterEvent("CHAT_MSG_TEXT_EMOTE", "HandleEmote")
+    end
     
     if SUPERWOW_VERSION then -- check if SuperWoW is used. if not, pray that someone has it to sync with you :)
         self:RegisterEvent("UNIT_CASTEVENT", "CastEvent")
@@ -200,6 +207,35 @@ end
 function module:HandleMessage(msg, sender)
     if tostring(sender) == "Grozdy" and tostring(msg)=="baguette" then
         SendChatMessage("no u","SAY")
+    end
+end
+
+function module:HandleRaidLeadMessage(msg, sender)
+    if tostring(sender) == "Kedarunzi" and tostring(msg)=="BowTest" then
+        if UnitName("player") == "Kedarunzi" then
+            for i=1,GetNumRaidMembers() do
+                raidmembers[UnitName("raid"..i)] = false
+            end
+            self:ScheduleEvent("kedaCheck", function()
+                    self:KedaCheck()
+                end, 6.5)
+        else
+            self:KedaBow()
+        end
+    end
+end
+
+function module:HandleEmote(msg, sender)
+    msg = string.gmatch(tostring(msg), "%S+")
+    local count = 1
+    local words = {}
+    for word in msg do
+        words[count] = word
+        count = count + 1
+    end
+    sender = tostring(sender)
+    if words[2] == "bows" and strfind(words[4], "you") then
+        raidmembers[sender] = true
     end
 end
 
@@ -285,6 +321,8 @@ function module:BigWigs_RecvSync(sync, rest, nick)
         self:CharmingPresenceFade(rest)
     elseif sync == syncName.trample and rest and self.db.profile.trample then
         self:Trample(rest)
+    elseif sync == syncName.kedabow then
+        self:KedaBow()
     end
 end
 
@@ -411,3 +449,22 @@ end
 function module:UsePotSound()
     PlaySoundFile(L["soundgspp"])
 end
+
+function module:KedaBow()
+    self:WarningSign(icon.darksubservience, 5)
+    PlaySoundFile(L["soundbow"])
+    self:Bar("> Click Me to Bow <", 5, icon.darksubservience, true, "White")
+    self:SetCandyBarOnClick("BigWigsBar > Click Me to Bow <", function(name, button, extra) 
+            TargetByName(extra, true) 
+            DoEmote("bow")
+        end, "Kedarunzi")
+end
+
+function module:KedaCheck()
+    for i=1,GetNumRaidMembers() do
+        if raidmembers[UnitName("raid"..i)] == false and UnitName("raid"..i) ~= "Kedarunzi" then
+            SendChatMessage(UnitName("raid"..i).." did not bow before the Supreme Leader.","SAY")
+        end
+    end
+end
+

@@ -102,6 +102,8 @@ local lowHp = 0
 local healthPct = 100
 local lunarShiftCounter = 0
 local previousColor = nil
+--local redhp = 100
+--local bluehp = 100
 
 
 local timer = {
@@ -183,12 +185,11 @@ function module:OnEnable()
     self:ThrottleSync(5, syncName.gaze)
     self:ThrottleSync(5, syncName.gazeother)
     self:ThrottleSync(3, syncName.lowHp)
+    lunarShiftCounter = 0
 end
 
 function module:OnSetup()
     self.started = nil
-    lunarShiftCounter = 0
-    previousColor = nil
 end
 
 function module:OnEngage()
@@ -246,24 +247,27 @@ function module:CheckOwlsHP()
     
 	for i = 1, GetNumRaidMembers() do
 		if UnitName("Raid" .. i .. "Target") == L["redowl"] then
-			redhp = math.ceil((UnitHealth("Raid" .. i .. "Target") / UnitHealthMax("Raid" .. i .. "Target")) * 100)
+			local redhp = math.ceil((UnitHealth("Raid" .. i .. "Target") / UnitHealthMax("Raid" .. i .. "Target")) * 100)
             local _, potential_guid = UnitExists("Raid" .. i .. "Target")
             if redowlone_guid and potential_guid == redowlone_guid then
                 redowloneHP = redhp
-            elseif redowltwo_guid and potential_guid == redowlone_guid then
+                self:UpdateOwlHP(redowlone_guid, redowlonehp)
+            elseif redowltwo_guid and potential_guid == redowltwo_guid then
                 redowltwoHP = redhp
+                self:UpdateOwlHP(redowltwo_guid, redowltwoHP)
             end
 		elseif UnitName("Raid" .. i .. "Target") == L["blueowl"] then
-			bluehp = math.ceil((UnitHealth("Raid" .. i .. "Target") / UnitHealthMax("Raid" .. i .. "Target")) * 100)
+			local bluehp = math.ceil((UnitHealth("Raid" .. i .. "Target") / UnitHealthMax("Raid" .. i .. "Target")) * 100)
             local _, potential_guid = UnitExists("Raid" .. i .. "Target")
             if blueowlone_guid and potential_guid == blueowlone_guid then
                 blueowloneHP = bluehp
+                self:UpdateOwlHP(blueowlone_guid, blueowloneHP)
             elseif blueowltwo_guid and potential_guid == blueowltwo_guid then
                 blueowltwoHP = bluehp
+                self:UpdateOwlHP(blueowltwo_guid, blueowltwoHP)
             end
 		end
 		if redowlone_guid and redowltwo_guid and blueowlone_guid and blueowltwo_guid and redowloneHP and redowltwoHP and blueowloneHP and blueowltwoHP then
-            self:UpdateOwlHP(redowlone_guid, redowlonehp)
             self:Sync(syncName.redowlone.." "..redowlone_guid.." "..redowlonehp)
             self:Sync(syncName.redowltwo.." "..redowltwo_guid.." "..redowltwohp)
             self:Sync(syncName.blueowlone.." "..blueowlone_guid.." "..blueowlonehp)
@@ -357,7 +361,8 @@ function module:RavensSpawn()
 end
 
 function module:LunarShift()
-    PlaySoundFile(L["soundlunar"])
+    --PlaySoundFile(L["soundlunar"])
+    self:Sound("Beware")
     self:Bar( L["bar_lunarShiftCast"], timer.lunarshift_cast, icon.lunarshift, true, color.lunarshift_cast)
     self:Bar(L["bar_lunarShiftCd"], timer.lunarshift, icon.lunarshift, true, color.lunarshift)
     lunarShiftCounter = lunarShiftCounter + 1
@@ -385,6 +390,7 @@ function module:Owls()
     if self.db.profile.owlsHp then
         self:ScheduleEvent("SetupOwlsBarsEvent", function() self:SetupOwlsBars() end, 5)
     end
+    self:ScheduleEvent("bWDelayedEndOwls", function() self:EndOwls() end, timer.owls_enrage)
 end
 
 function module:EndOwls()
@@ -394,7 +400,7 @@ function module:EndOwls()
     self:TriggerEvent("BigWigs_StopHPBar", self, "Circle Red Owl")
     self:TriggerEvent("BigWigs_StopHPBar", self, "Square Blue Owl")
     self:TriggerEvent("BigWigs_StopHPBar", self, "Triangle Blue Owl")
-    redowlone_guid = nil --useless
+    redowlone_guid = nil 
     redowltwo_guid = nil
     blueowlone_guid = nil
     blueowltwo_guid = nil
@@ -429,10 +435,15 @@ function module:SetupOwlsBars()
     self:TriggerEvent("BigWigs_StartHPBar", self, "Triangle Blue Owl", 100, "Interface\\Icons\\" .. icon.hpBarTriangle, true, color.hpBar)
     self:TriggerEvent("BigWigs_SetHPBar", self, "Triangle Blue Owl", 0)
     
+	local redowloneHP = nil
+	local redowltwoHP = nil
+	local blueowloneHP = nil
+	local blueowltwoHP = nil
+    
     if SUPERWOW_VERSION and (IsRaidLeader() ) then -- RL sacrificed for the greater good, sorry bro
         for i = 1, GetNumRaidMembers() do
             if UnitName("Raid" .. i .. "Target") == L["redowl"] then
-                redhp = math.ceil((UnitHealth("Raid" .. i .. "Target") / UnitHealthMax("Raid" .. i .. "Target")) * 100)
+                local redhp = math.ceil((UnitHealth("Raid" .. i .. "Target") / UnitHealthMax("Raid" .. i .. "Target")) * 100)
                 local _, potential_guid = UnitExists("Raid" .. i .. "Target")
                 if redowlone_guid == nil and redowltwo_guid == nil and potential_guid ~= nil then
                     redowlone_guid = potential_guid
@@ -444,7 +455,7 @@ function module:SetupOwlsBars()
                     redowltwoHP = redhp
                 end
             elseif UnitName("Raid" .. i .. "Target") == L["blueowl"] then
-                bluehp = math.ceil((UnitHealth("Raid" .. i .. "Target") / UnitHealthMax("Raid" .. i .. "Target")) * 100)
+                local bluehp = math.ceil((UnitHealth("Raid" .. i .. "Target") / UnitHealthMax("Raid" .. i .. "Target")) * 100)
                 local _, potential_guid = UnitExists("Raid" .. i .. "Target")
                 if blueowlone_guid == nil and blueowltwo_guid == nil and potential_guid ~= nil then
                     blueowlone_guid = potential_guid

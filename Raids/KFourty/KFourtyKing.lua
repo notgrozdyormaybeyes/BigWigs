@@ -329,7 +329,7 @@ end
 function module:InVoidZone()
     self:Message(L["msg_invz"], "Urgent")
     self:WarningSign(icon.circle, 3)
-    self:Sound("RunAway")
+    self:Sound("Beware")
 end
 
 function module:KingsFury()

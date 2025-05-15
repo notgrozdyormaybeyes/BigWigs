@@ -480,8 +480,8 @@ function module:Corruption(rest)
         SendChatMessage(UnitName("Player").." is Corrupted!","SAY")
         self:Message(L["msg_corruptionYou"], "Urgent") --, false, nil, false)
         self:WarningSign(icon.corruption, timer.corruption)
-        PlaySoundFile(L["soundcorrupYou"])
-        --self:Sound("RunAway")
+        --PlaySoundFile(L["soundcorrupYou"])
+        self:Sound("RunAway")
     end
     if (IsRaidLeader() or IsRaidOfficer()) then
         for i=1,GetNumRaidMembers() do

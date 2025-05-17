@@ -87,6 +87,9 @@ local king_guid = "" --will be synced in OnEngage()
 local queen_guid = "" --will be synced later when she spawns
 local kingsfury_id = 51229
 local darksubservience_id = 41647
+local voidzone_id = 52667 --blunder
+local _, playerGUID = UnitExists("PLAYER")
+local playerName = UnitName("PLAYER")
 
 local usepotcounter = 0
 
@@ -173,7 +176,7 @@ end
 
 function module:OnEngage()
     if SUPERWOW_VERSION and IsRaidLeader() then 
-        TargetByName("King", true) --enUS hardcoded... should use L["bossname"]
+        TargetByName("King") --enUS hardcoded... should use L["bossname"]
         local _, king_guid = UnitExists("target")
         self:Sync(syncName.bossguid.." "..king_guid)
         TargetLastTarget()
@@ -256,23 +259,38 @@ end
 
 function module:CastEvent(casterGuid, targetGuid, eventType, spellId, castTime)
     if casterGuid == king_guid then
-        if spellId == kingsfury_id and eventType == "START" then -- doesn't work because no one targets king
+        if spellId == kingsfury_id and eventType == "START" then
             self:Sync(syncName.kingsfury)
         end
     elseif casterGuid == queen_guid then
+    end
+    -- Chess King VoidZone (Blunder)
+    if (spellId == voidzone_id) then
+        if ((targetGuid == playerGUID) and (playerName)) then
+            SendChatMessage("Void Zone on "..tostring(playerName).."!", "SAY")
+        end
     end
 end
 
 function module:CHAT_MSG_COMBAT_HOSTILE_DEATH(msg)
 	if (msg == string.format(UNITDIESOTHER, "Rook")) then
-        self:Message("Rook is dead, HIDE!")
-        self:Sync(syncName.kingsfury)
+        self:Message("Rook is dead, HIDE!", "Urgent")
+        self:Sound("RunAway")
+        if self.db.profile.kingsfury then
+            self:Kingsfury()
+        end
 	elseif (msg == string.format(UNITDIESOTHER, "Knight")) then
-        self:Message("Knight is dead, HIDE!")
-        self:Sync(syncName.kingsfury)
+        self:Message("Knight is dead, HIDE!", "Urgent")
+        self:Sound("RunAway")
+        if self.db.profile.kingsfury then
+            self:Kingsfury()
+        end
 	elseif (msg == string.format(UNITDIESOTHER, "Bishop")) then
-        self:Message("Bishop is dead, HIDE!")
-        self:Sync(syncName.kingsfury)
+        self:Message("Bishop is dead, HIDE!", "Urgent")
+        self:Sound("RunAway")
+        if self.db.profile.kingsfury then
+            self:Kingsfury()
+        end
     end
 end
 

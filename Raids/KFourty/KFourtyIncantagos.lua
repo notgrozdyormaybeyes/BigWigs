@@ -188,7 +188,7 @@ end
 
 function module:OnEngage()
     if SUPERWOW_VERSION and UnitClass("Player") == "Hunter" then --sorry hunters :(
-        TargetByName("Ley-Watcher Incantagos", true) --enUS hardcoded... should use L["bossname"]
+        TargetByName("Ley-Watcher Incantagos") --enUS hardcoded... should use L["bossname"]
         local _, boss_guid = UnitExists("target")
         self:Sync(syncName.bossguid.." "..boss_guid)
         TargetLastTarget()

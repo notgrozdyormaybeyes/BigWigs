@@ -240,41 +240,48 @@ function module:UNIT_HEALTH(msg)
 end
 
 function module:CheckOwlsHP()
-	local redowloneHP = nil
-	local redowltwoHP = nil
-	local blueowloneHP = nil
-	local blueowltwoHP = nil
     
-	for i = 1, GetNumRaidMembers() do
-		if UnitName("Raid" .. i .. "Target") == L["redowl"] then
-			local redhp = math.ceil((UnitHealth("Raid" .. i .. "Target") / UnitHealthMax("Raid" .. i .. "Target")) * 100)
-            local _, potential_guid = UnitExists("Raid" .. i .. "Target")
-            if redowlone_guid and potential_guid == redowlone_guid then
-                redowloneHP = redhp
-                self:UpdateOwlHP(redowlone_guid, redowlonehp)
-            elseif redowltwo_guid and potential_guid == redowltwo_guid then
-                redowltwoHP = redhp
-                self:UpdateOwlHP(redowltwo_guid, redowltwoHP)
+    -- check if guid are nil, ie if raid leader has turned off hp bars, then make them disappear
+    if redowlone_guid == nil or redowltwo_guid == nil or blueowlone_guid == nil or blueowltwo_guid == nil then
+        self:EndOwls()
+    else
+        
+        local redowloneHP = nil
+        local redowltwoHP = nil
+        local blueowloneHP = nil
+        local blueowltwoHP = nil
+        
+        for i = 1, GetNumRaidMembers() do
+            if UnitName("Raid" .. i .. "Target") == L["redowl"] then
+                local redhp = math.ceil((UnitHealth("Raid" .. i .. "Target") / UnitHealthMax("Raid" .. i .. "Target")) * 100)
+                local _, potential_guid = UnitExists("Raid" .. i .. "Target")
+                if redowlone_guid and potential_guid == redowlone_guid then
+                    redowloneHP = redhp
+                    self:UpdateOwlHP(redowlone_guid, redowlonehp)
+                elseif redowltwo_guid and potential_guid == redowltwo_guid then
+                    redowltwoHP = redhp
+                    self:UpdateOwlHP(redowltwo_guid, redowltwoHP)
+                end
+            elseif UnitName("Raid" .. i .. "Target") == L["blueowl"] then
+                local bluehp = math.ceil((UnitHealth("Raid" .. i .. "Target") / UnitHealthMax("Raid" .. i .. "Target")) * 100)
+                local _, potential_guid = UnitExists("Raid" .. i .. "Target")
+                if blueowlone_guid and potential_guid == blueowlone_guid then
+                    blueowloneHP = bluehp
+                    self:UpdateOwlHP(blueowlone_guid, blueowloneHP)
+                elseif blueowltwo_guid and potential_guid == blueowltwo_guid then
+                    blueowltwoHP = bluehp
+                    self:UpdateOwlHP(blueowltwo_guid, blueowltwoHP)
+                end
             end
-		elseif UnitName("Raid" .. i .. "Target") == L["blueowl"] then
-			local bluehp = math.ceil((UnitHealth("Raid" .. i .. "Target") / UnitHealthMax("Raid" .. i .. "Target")) * 100)
-            local _, potential_guid = UnitExists("Raid" .. i .. "Target")
-            if blueowlone_guid and potential_guid == blueowlone_guid then
-                blueowloneHP = bluehp
-                self:UpdateOwlHP(blueowlone_guid, blueowloneHP)
-            elseif blueowltwo_guid and potential_guid == blueowltwo_guid then
-                blueowltwoHP = bluehp
-                self:UpdateOwlHP(blueowltwo_guid, blueowltwoHP)
+            if redowlone_guid and redowltwo_guid and blueowlone_guid and blueowltwo_guid and redowloneHP and redowltwoHP and blueowloneHP and blueowltwoHP then
+                self:Sync(syncName.redowlone.." "..redowlone_guid.." "..redowlonehp)
+                self:Sync(syncName.redowltwo.." "..redowltwo_guid.." "..redowltwohp)
+                self:Sync(syncName.blueowlone.." "..blueowlone_guid.." "..blueowlonehp)
+                self:Sync(syncName.blueowltwo.." "..blueowltwo_guid.." "..blueowltwohp)
+                break
             end
-		end
-		if redowlone_guid and redowltwo_guid and blueowlone_guid and blueowltwo_guid and redowloneHP and redowltwoHP and blueowloneHP and blueowltwoHP then
-            self:Sync(syncName.redowlone.." "..redowlone_guid.." "..redowlonehp)
-            self:Sync(syncName.redowltwo.." "..redowltwo_guid.." "..redowltwohp)
-            self:Sync(syncName.blueowlone.." "..blueowlone_guid.." "..blueowlonehp)
-            self:Sync(syncName.blueowltwo.." "..blueowltwo_guid.." "..blueowltwohp)
-			break
-		end
-	end
+        end
+    end
     
 end
 

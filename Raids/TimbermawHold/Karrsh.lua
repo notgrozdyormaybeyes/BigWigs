@@ -3,7 +3,7 @@ local module, L = BigWigs:ModuleDeclaration("Karrsh the Sentinel", "Timbermaw Ho
 module.revision = 30020
 module.enabletrigger = "Karrsh"
 module.toggleoptions = {"maul", "felstomp", "corruption"}
-module.zonename = nil
+module.zonename = "TimbermawHold"
 
 module.defaultDB = {
     maul = true,

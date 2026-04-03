@@ -1,9 +1,9 @@
 local module, L = BigWigs:ModuleDeclaration("Selenaxx Foulheart", "Timbermaw Hold")
 
 module.revision = 30020
-module.enabletrigger = "Ursol"
+module.enabletrigger = "Selenaxx"
 module.toggleoptions = {"taint", "hptrack", "marksatyrs"}
-module.zonename = "TimbermawHold"
+module.zonename = nil
 
 module.defaultDB = {
     taint = true,

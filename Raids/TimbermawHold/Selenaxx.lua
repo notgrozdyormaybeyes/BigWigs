@@ -244,7 +244,9 @@ function module:CheckUnitTarget(unit)
     if marked[guid] then return end
     if UnitName(target) ~= "Foulheart Warlock" then return end
     if not (IsRaidLeader() or IsRaidOfficer()) then return end
-    if icons == 0 then return end
+    if not next(icons) then
+        return
+    end
     local iconId = icons[1]
     SetRaidTarget(target, iconId)
     marked[guid] = true
@@ -262,7 +264,9 @@ function module:TryMarkGuid(guid)
     for _, unit in ipairs(units) do
         local exists, uguid = UnitExists(unit)
         if exists and uguid == guid and UnitName(unit) == "Foulheart Warlock" then
-            if icons == 0 then return end
+            if not next(icons) then
+                return
+            end
             local iconId = icons[1]
             SetRaidTarget(unit, iconId)
             marked[guid] = true

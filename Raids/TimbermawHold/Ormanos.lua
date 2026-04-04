@@ -1,7 +1,7 @@
 local module, L = BigWigs:ModuleDeclaration("Ormanos the Cracked", "Timbermaw Hold")
 
 module.revision = 30020
-module.enabletrigger = "Ormanos"
+module.enabletrigger = "Ormanos the Cracked"
 module.toggleoptions = {"rampaging", "crush", "erosion"}
 module.zonename = "TimbermawHold"
 
@@ -24,7 +24,7 @@ L:RegisterTranslations("enUS", function() return {
     erosion_desc = "Warn for Erosion (only for RL & assists)",
     rampaging_warning_bar = "Run away!!",
     rampaging_warning_msg = "Charge on YOU! Run away from the boss!",
-    rampaging_warning_RL = "must run away from the boss, clear path!",
+    rampaging_warning_RL = "must run away from the boss, stack on DIAMOND!",
     trigger_rampaging = "Ormanos is preparing to charge ([^%s]+)!",
     crush_bar = "Crush incoming",
     crush_duration_bar = "Watchout for crushed earth",
@@ -172,7 +172,7 @@ function module:Rampaging(target)
         SendChatMessage(target.." "..L["rampaging_warning_RL"], "RAID_WARNING")
         for i = 1, GetNumRaidMembers() do
             if UnitName("raid"..i) == target then
-                SetRaidTarget("raid"..i, 4)
+                SetRaidTarget("raid"..i, 3)
             end
         end
     end

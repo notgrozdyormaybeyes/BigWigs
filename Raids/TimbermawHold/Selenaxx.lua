@@ -1,7 +1,7 @@
 local module, L = BigWigs:ModuleDeclaration("Selenaxx Foulheart", "Timbermaw Hold")
 
 module.revision = 30020
-module.enabletrigger = "Selenaxx"
+module.enabletrigger = "Selenaxx Foulheart"
 module.toggleoptions = {"taint", "hptrack", "marksatyrs"}
 module.zonename = "TimbermawHold"
 

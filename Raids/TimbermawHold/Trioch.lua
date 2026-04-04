@@ -1,7 +1,7 @@
 local module, L = BigWigs:ModuleDeclaration("Trioch the Devourer", "Timbermaw Hold")
 
 module.revision = 30020
-module.enabletrigger = "Trioch"
+module.enabletrigger = "Trioch the Devourer"
 module.toggleoptions = {"icicle"}
 module.zonename = "TimbermawHold"
 
@@ -11,17 +11,19 @@ module.defaultDB = {
 
 L:RegisterTranslations("enUS", function() return {
     cmd = "Trioch",
+
     icicle_cmd = "Icicle",
     icicle_name = "Icicle Alert",
     icicle_desc = "Warn for Icicle",
+
     icicle_warning_bar = "Stack on boss!",
     icicle_warning_msg = "Icicle on YOU! Stack on boss!",
     icicle_warning_RL = "TRIANGLE and MOON stack on boss",
-    trigger_icicles = "Trioch targets ([^%s]+) and ([^%s]+) with giant icicles!",
+
+    trigger_icicles = "Trioch targets ([%w%-]+) and ([%w%-]+) with giant icicles",
 } end)
 
 local trioch_guid = nil
-local raidmembers = {}
 
 local timer = {
     icicle = 3,
@@ -44,16 +46,9 @@ function module:OnEnable()
     self:RegisterEvent("CHAT_MSG_MONSTER_YELL", "Event")
     self:RegisterEvent("CHAT_MSG_MONSTER_EMOTE", "OnEmote")
     self:RegisterEvent("CHAT_MSG_RAID_BOSS_EMOTE", "OnEmote")
-    self:RegisterEvent("CHAT_MSG_SPELL_PERIODIC_SELF_DAMAGE", "Event")
-    self:RegisterEvent("CHAT_MSG_SPELL_PERIODIC_PARTY_DAMAGE", "Event")
-    self:RegisterEvent("CHAT_MSG_SPELL_PERIODIC_FRIENDLYPLAYER_DAMAGE", "Event")
-    self:RegisterEvent("CHAT_MSG_SPELL_PERIODIC_SELF_BUFFS", "Event")
-    self:RegisterEvent("CHAT_MSG_SPELL_AURA_GONE_SELF", "Event")
-    self:RegisterEvent("CHAT_MSG_SPELL_AURA_GONE_PARTY", "Event")
-    self:RegisterEvent("CHAT_MSG_SPELL_AURA_GONE_OTHER", "Event")
 
     if SUPERWOW_VERSION then
-        self:RegisterEvent("UNIT_CASTEVENT", "CastEvent")
+        self:ScheduleRepeatingEvent("ScanTriochBoss", self.ScanBossGuid, 0.5, self)
     end
 
     self:ThrottleSync(20, syncName.bossguid)
@@ -62,29 +57,37 @@ end
 
 function module:OnSetup()
     self.started = nil
-    if IsRaidLeader() or IsRaidOfficer() then
-        for i = 1, GetNumRaidMembers() do
-            local _, guid = UnitExists("raid"..i)
-            raidmembers[guid] = UnitName("raid"..i)
-        end
-    end
 end
 
 function module:OnEngage()
-    if SUPERWOW_VERSION and (IsRaidLeader() or IsRaidOfficer() or UnitClass("player") == "Warrior") then
-        TargetByName("Trioch the Devourer", true)
-        local _, guid = UnitExists("target")
-        if guid then
-            self:Sync(syncName.bossguid.." "..guid)
-        end
-    end
 end
 
 function module:OnDisengage()
     self:CancelAllScheduledEvents()
-    if IsRaidLeader() or IsRaidOfficer() then
+    if IsRaidLeader() then
         for i = 1, GetNumRaidMembers() do
             SetRaidTarget("raid"..i, 0)
+        end
+    end
+end
+
+function module:ScanBossGuid()
+    if trioch_guid then
+        self:CancelScheduledEvent("ScanTriochBoss")
+        return
+    end
+
+    for _, frame in ipairs({WorldFrame:GetChildren()}) do
+        if frame.GetName and frame:GetName() then
+            local guid = frame:GetName(1)
+            if guid then
+                local name = UnitName(guid)
+                if name == "Trioch the Devourer" then
+                    trioch_guid = guid
+                    self:Sync(syncName.bossguid.." "..guid)
+                    break
+                end
+            end
         end
     end
 end
@@ -92,15 +95,13 @@ end
 function module:CastEvent(casterGuid, targetGuid, eventType, spellId, castTime)
 end
 
-function module:UNIT_HEALTH(msg)
-end
-
 function module:Event(msg)
 end
 
 function module:OnEmote(msg)
-    if string.find(msg, L["trigger_icicles"]) and self.db.profile.icicle then
-        local _, _, p1, p2 = string.find(msg, L["trigger_icicles"])
+    if not self.db.profile.icicle then return end
+    local p1, p2 = string.match(msg, L["trigger_icicles"])
+    if p1 and p2 then
         self:Sync(syncName.icicle.." "..p1.." "..p2)
     end
 end
@@ -108,29 +109,30 @@ end
 function module:BigWigs_RecvSync(sync, rest)
     if sync == syncName.bossguid then
         trioch_guid = rest
-    elseif sync == syncName.icicle and self.db.profile.icicle then
-        local p1, p2 = rest:match("([^%s]+)%s+([^%s]+)")
-        self:Icicle(p1, p2)
-    end
-end
 
-function module:RemoveCastbars()
+    elseif sync == syncName.icicle and self.db.profile.icicle then
+        local p1, p2 = rest:match("(.+)%s+(.+)")
+        if p1 and p2 then
+            self:Icicle(p1, p2)
+        end
+    end
 end
 
 function module:Icicle(playerOne, playerTwo)
     if IsRaidLeader() then
         SendChatMessage(L["icicle_warning_RL"], "RAID_WARNING")
         for i = 1, GetNumRaidMembers() do
-            if UnitName("raid"..i) == playerOne then
+            local name = UnitName("raid"..i)
+            if name == playerOne then
                 SetRaidTarget("raid"..i, 4)
-            end
-            if UnitName("raid"..i) == playerTwo then
+            elseif name == playerTwo then
                 SetRaidTarget("raid"..i, 5)
             end
         end
     end
 
-    if UnitName("player") == playerOne or UnitName("player") == playerTwo then
+    local me = UnitName("player")
+    if me == playerOne or me == playerTwo then
         self:Bar(L["icicle_warning_bar"], timer.icicle, icon.icicle, true, color.icicle)
         self:Message(L["icicle_warning_msg"], "Urgent")
     end

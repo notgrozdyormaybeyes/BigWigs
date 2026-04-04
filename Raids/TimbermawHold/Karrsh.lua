@@ -1,7 +1,7 @@
 local module, L = BigWigs:ModuleDeclaration("Karrsh the Sentinel", "Timbermaw Hold")
 
 module.revision = 30020
-module.enabletrigger = "Karrsh"
+module.enabletrigger = "Karrsh the Sentinel"
 module.toggleoptions = {"maul", "felstomp", "corruption"}
 module.zonename = "TimbermawHold"
 

@@ -1,7 +1,7 @@
 local module, L = BigWigs:ModuleDeclaration("Archdruid Kronn", "Timbermaw Hold")
 
 module.revision = 30020
-module.enabletrigger = "Kronn"
+module.enabletrigger = "Archdruid Kronn"
 module.toggleoptions = {"reform", "hpframe", "corruption"}
 module.zonename = "TimbermawHold"
 
@@ -64,6 +64,8 @@ local color = {
 local syncName = {
     bad_guid = "BadGuid"..module.revision,
     good_guid = "GoodGuid"..module.revision,
+    hpBad = "KronnBadHP"..module.revision,
+    hpGood = "KronnGoodHP"..module.revision,
     reform = "Reform"..module.revision,
     corruption = "Corruption"..module.revision,
     corruptionFade = "CorruptionFade"..module.revision,
@@ -95,6 +97,8 @@ function module:OnEnable()
     
     self:ThrottleSync(20, syncName.bad_guid)
     self:ThrottleSync(20, syncName.good_guid)
+    self:ThrottleSync(1, syncName.hpBad)
+    self:ThrottleSync(1, syncName.hpGood)
     self:ThrottleSync(3, syncName.reform)
     self:ThrottleSync(3, syncName.corruption)
     self:ThrottleSync(3, syncName.corruptionFade)
@@ -113,23 +117,38 @@ function module:OnSetup()
 end
 
 function module:OnEngage()
-    if SUPERWOW_VERSION and (IsRaidLeader() or IsRaidOfficer() or UnitClass("player") == "Warrior") then
-        TargetByName("Archdruid Kronn", true)
-        local _, bg = UnitExists("target")
-        if bg then
-            self:Sync(syncName.bad_guid.." "..bg)
-        end
-        TargetByName("Dreamform of Kronn", true)
-        local _, gg = UnitExists("target")
-        if gg then
-            self:Sync(syncName.good_guid.." "..gg)
-        end
+    if SUPERWOW_VERSION then
+        self:ScheduleRepeatingEvent("ScanKronnBosses", self.ScanBossGuids, 0.5, self)
     end
     self:Proximity()
     if self.db.profile.hpframe then
         self:ScheduleRepeatingEvent("CheckHps", self.CheckHps, 2, self)
     end
 end
+
+function module:ScanBossGuids()
+    if bad_guid and good_guid then
+        self:CancelScheduledEvent("ScanKronnBosses")
+        return
+    end
+
+    for _, frame in ipairs({WorldFrame:GetChildren()}) do
+        if frame.GetName and frame:GetName() then
+            local guid = frame:GetName(1)
+            if guid then
+                local name = UnitName(guid)
+                if name == "Archdruid Kronn" and not bad_guid then
+                    bad_guid = guid
+                    self:Sync(syncName.bad_guid.." "..guid)
+                elseif name == "Dreamform of Kronn" and not good_guid then
+                    good_guid = guid
+                    self:Sync(syncName.good_guid.." "..guid)
+                end
+            end
+        end
+    end
+end
+
 
 function module:OnDisengage()
     self:CancelAllScheduledEvents()
@@ -182,6 +201,18 @@ function module:BigWigs_RecvSync(sync, rest, nick)
         self:Corruption(rest)
     elseif sync == syncName.corruptionFade and rest and self.db.profile.corruption then
         self:CorruptionFade(rest)
+    elseif sync == syncName.hpBad then
+        local hp = tonumber(rest)
+        if hp then
+            self.badHp = hp
+            self:UpdateBossStatusFrame()
+        end
+    elseif sync == syncName.hpGood then
+        local hp = tonumber(rest)
+        if hp then
+            self.goodHp = hp
+            self:UpdateBossStatusFrame()
+        end
     end
 end
 
@@ -193,12 +224,21 @@ function module:Reform()
         SendChatMessage(L["hp_msg_bad_reform"], "RAID_WARNING")
     end
     self:Bar(L["reform_bar"], timer.reform, icon.reform, true, color.reform)
+
+    self.badHp = 30
+    self:ScheduleEvent("RescanKronnHP", function()
+        self:CheckHps()
+    end, 1)
 end
+
+
+local lastWarn = 0
 
 function module:UpdateBossStatusFrame()
     if not self.db.profile.hpframe then
         return
     end
+
     if not self.bossStatusFrame then
         self.bossStatusFrame = CreateFrame("Frame", "KronnFrame", UIParent)
         self.bossStatusFrame:SetWidth(160)
@@ -227,11 +267,18 @@ function module:UpdateBossStatusFrame()
         self.bossStatusFrame.good:SetFont(font, 11)
         self.bossStatusFrame.good:SetPoint("TOPLEFT", self.bossStatusFrame, "TOPLEFT", 10, -28)
     end
+    if not bad_guid or not good_guid then
+        self.bossStatusFrame:Hide()
+        return
+    end
     self.bossStatusFrame:Show()
     self.bossStatusFrame.bad:SetText("BAD:   "..self.badHp.."%")
     self.bossStatusFrame.good:SetText("GOOD:  "..self.goodHp.."%")
     
 
+    if GetTime() - lastWarn < 5 then return end -- cooldown 5s
+    lastWarn = GetTime()
+    
     if IsRaidLeader() then
         if self.badHp <= 25 and self.goodHp <= 80 then
             SendChatMessage(L["hp_msg_bad_slowdown"], "RAID_WARNING")
@@ -245,28 +292,61 @@ function module:UpdateBossStatusFrame()
     end
 end
 
+---function module:CheckHps()
+---    local meanHp, niceHp
+---
+---    for i = 1, GetNumRaidMembers() do
+---        local unit = "raid"..i.."target"
+---        local _, guid = UnitExists(unit)
+---
+---        if guid then
+---            if guid == bad_guid and not meanHp then
+---                meanHp = math.ceil(UnitHealth(unit) / UnitHealthMax(unit) * 100)
+---            elseif guid == good_guid and not niceHp then
+---                niceHp = math.ceil(UnitHealth(unit) / UnitHealthMax(unit) * 100)
+---            end
+---        end
+---
+---        if meanHp and niceHp then break end
+---    end
+---
+---    if meanHp then self.badHp = meanHp end
+---    if niceHp then self.goodHp = niceHp end
+---
+---    self:UpdateBossStatusFrame()
+---end
+
 function module:CheckHps()
     local meanHp, niceHp
-    for i = 1, GetNumRaidMembers() do
-        local targetString = "raid"..i.."target"
-        local targetName = UnitName(targetString)
-        if targetName == "Archdruid Kronn" and not meanHp then
-            meanHp = math.ceil((UnitHealth(targetString) / UnitHealthMax(targetString)) * 100)
-        elseif targetName == "Dreamform of Kronn" and not niceHp then
-            niceHp = math.ceil((UnitHealth(targetString) / UnitHealthMax(targetString)) * 100)
-        end
-        if meanHp and niceHp then
-            break
+
+    -- Scan nameplates (SuperWoW)
+    for _, frame in ipairs({WorldFrame:GetChildren()}) do
+        if frame.GetName and frame:GetName() then
+            local guid = frame:GetName(1)
+            if guid then
+                if guid == bad_guid then
+                    meanHp = math.ceil(UnitHealth(guid) / UnitHealthMax(guid) * 100)
+                elseif guid == good_guid then
+                    niceHp = math.ceil(UnitHealth(guid) / UnitHealthMax(guid) * 100)
+                end
+            end
         end
     end
+
+    if meanHp then self.badHp = meanHp end
+    if niceHp then self.goodHp = niceHp end
     if meanHp then
-        self.badHp = meanHp
+        self:Sync(syncName.hpBad.." "..meanHp)
     end
+
     if niceHp then
-        self.goodHp = niceHp
+        self:Sync(syncName.hpGood.." "..niceHp)
     end
+
     self:UpdateBossStatusFrame()
 end
+
+
 
 function module:Corruption(rest)
     self:Bar(rest..L["bar_corruption"], timer.corruption, icon.corruption, true, color.corruption)

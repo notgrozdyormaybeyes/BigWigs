@@ -3,7 +3,7 @@ local module, L = BigWigs:ModuleDeclaration("Chieftain Partath", "Timbermaw Hold
 
 
 module.revision = 30020
-module.enabletrigger = "Partath"
+module.enabletrigger = "Chieftain Partath"
 module.toggleoptions = {"bubble", "ritual", "interrupt"}
 module.zonename = "TimbermawHold"
 

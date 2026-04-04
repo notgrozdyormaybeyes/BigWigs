@@ -90,6 +90,7 @@ L:RegisterTranslations("enUS", function() return {
 
     mc_rw = "%s is MC'd, focus %s!",
     immunity_bar = "Everyone immune",
+    ursol_immunity_bar = "Ursol is immune",
 
 } end)
 
@@ -126,6 +127,7 @@ local timers = {
     fiendWave = 15,
     nightmareFire = 24,
     immunity = 30,
+    ursol_immune = 100,
 }
 
 local icons = {
@@ -182,6 +184,7 @@ function module:OnEnable()
     self:RegisterEvent("CHAT_MSG_SPELL_AURA_GONE_SELF", "OnCombatLog")
     self:RegisterEvent("CHAT_MSG_SPELL_AURA_GONE_PARTY", "OnCombatLog")
     self:RegisterEvent("CHAT_MSG_SPELL_AURA_GONE_OTHER", "OnCombatLog")
+
 
     if SUPERWOW_VERSION then
         self:RegisterEvent("UNIT_CASTEVENT", "OnCastEvent")
@@ -322,48 +325,50 @@ function module:OnCastEvent(casterGuid, targetGuid, eventType, spellId, castTime
 end
 
 function module:OnCombatLog(msg)
-    -- Nightmare Fire gain
-    if string.find(msg, L["nightmarefire_spell"]) and string.find(msg, "afflicted by") then
-        local player = string.match(msg, "(.+) is afflicted by "..L["nightmarefire_spell"])
-        if player then
-            self:Sync(syncName.nightmareFireGain.." "..player)
+    if type(msg) ~= "string" then return end
+    
+    if string.find(msg, " ") then
+        if msg:find(L["nightmarefire_spell"]) and msg:find("afflicted by") then
+            local player = msg:match("^(.+) is afflicted by "..L["nightmarefire_spell"])
+            if player then
+                self:Sync(syncName.nightmareFireGain.." "..player)
+            end
+            return
         end
-        return
-    end
-    -- Nightmare Fire fades
-    local fadeTarget = string.match(msg, L["nightmarefire_fade"])
-    if fadeTarget then
-        self:Sync(syncName.nightmareFireFade.." "..fadeTarget)
-        return
-    end
 
-    -- Fixate gain
-    if string.find(msg, L["fixate_spell"]) and string.find(msg, "afflicted by") then
-        local player = string.match(msg, "(.+) is afflicted by "..L["fixate_spell"])
-        if player then
-            self:Sync(syncName.fiendFixate.." "..player)
+        local fadeTarget = msg:match(L["nightmarefire_fade"])
+        if fadeTarget then
+            self:Sync(syncName.nightmareFireFade.." "..fadeTarget)
+            return
         end
-        return
-    end
 
-    -- Possess gain
-    if string.find(msg, L["possess_spell"]) and string.find(msg, "afflicted by") then
-        local player = string.match(msg, "(.+) is afflicted by "..L["possess_spell"])
-        if player then
-            self:Sync(syncName.possessGain.." "..player)
+        if msg:find(L["fixate_spell"]) and msg:find("afflicted by") then
+            local player = msg:match("^(.+) is afflicted by "..L["fixate_spell"])
+            if player then
+                self:Sync(syncName.fiendFixate.." "..player)
+            end
+            return
         end
-        return
-    end
 
-    -- Possess fades
-    if string.find(msg, L["possess_spell"]) and string.find(msg, "fades from") then
-        local player = string.match(msg, L["possess_spell"].." fades from (.+)")
-        if player then
-            self:Sync(syncName.possessFade.." "..player)
+        if msg:find(L["possess_spell"]) and msg:find("afflicted by") then
+            local player = msg:match("^(.+) is afflicted by "..L["possess_spell"])
+            if player then
+                self:Sync(syncName.possessGain.." "..player)
+            end
+            return
         end
-        return
+
+        if msg:find(L["possess_spell"]) and msg:find("fades from") then
+            local player = msg:match(L["possess_spell"].." fades from (.+)")
+            if player then
+                self:Sync(syncName.possessFade.." "..player)
+            end
+            return
+        end
     end
 end
+
+
 
 function module:OnUnitDied(guid)
     if fiendGuids[guid] then
@@ -430,21 +435,25 @@ end
 function module:ScanNewCorrupter()
     if not (IsRaidLeader() or IsRaidOfficer()) then return end
 
-    TargetByName("Withermaw Corrupter", true)
-    local _, guid = UnitExists("target")
-    if guid then
-        -- If we don't have skull or cross yet, assign one
-        if not corrupter1_guid then
-            corrupter1_guid = guid
-            self:Sync(syncName.corrupter1.." "..guid)
-            SetRaidTarget("target", 8)
-        elseif not corrupter2_guid and guid ~= corrupter1_guid then
-            corrupter2_guid = guid
-            self:Sync(syncName.corrupter2.." "..guid)
-            SetRaidTarget("target", 7)
+    for _, frame in ipairs({WorldFrame:GetChildren()}) do
+        if frame.GetName and frame:GetName() then
+            local guid = frame:GetName(1)
+            if guid then
+                local name = UnitName(guid)
+                if name == "Withermaw Corrupter" then
+                    if not corrupter1_guid then
+                        corrupter1_guid = guid
+                        self:Sync(syncName.corrupter1.." "..guid)
+                        SetRaidTarget(guid, 8, true)
+                    elseif not corrupter2_guid and guid ~= corrupter1_guid then
+                        corrupter2_guid = guid
+                        self:Sync(syncName.corrupter2.." "..guid)
+                        SetRaidTarget(guid, 7, true)
+                    end
+                end
+            end
         end
     end
-    ClearTarget()
 end
 
 function module:HandleTwisted(casterGuid)
@@ -525,24 +534,11 @@ end
 function module:HandleNightmareFireGain(player)
     nightmareFireTargets[player] = GetTime() + timers.nightmareFire
 
-    -- Message for RL/RA
     if IsRaidLeader() or IsRaidOfficer() then
         self:Message("Nightmare Fire on "..player, "Important")
     end
 
-    -- Timer bar
     self:Bar("Nightmare Fire: "..player, timers.nightmareFire, icons.nightmareFire, true, colors.nightmareFire)
-
-    -- Optional: mark the tank
-    if SUPERWOW_VERSION and (IsRaidLeader() or IsRaidOfficer()) then
-        for i = 1, GetNumRaidMembers() do
-            local unit = "raid"..i
-            if UnitName(unit) == player then
-                SetRaidTarget(unit, 1) -- Star
-                break
-            end
-        end
-    end
 end
 
 function module:HandleNightmareFireFade(player)
@@ -552,17 +548,8 @@ function module:HandleNightmareFireFade(player)
         self:Message("Nightmare Fire faded from "..player, "Positive")
     end
 
-    -- Remove mark
-    if SUPERWOW_VERSION and (IsRaidLeader() or IsRaidOfficer()) then
-        for i = 1, GetNumRaidMembers() do
-            local unit = "raid"..i
-            if UnitName(unit) == player then
-                SetRaidTarget(unit, 0)
-                break
-            end
-        end
-    end
 end
+
 
 
 ------------------------------------------------
@@ -600,66 +587,54 @@ function module:FiendWave()
     end
 end
 
-function module:ScanFiends(expectedCount)
+function module:ScanFiends()
     if not (IsRaidLeader() or IsRaidOfficer()) then return end
 
-    -- Very naive scan: cycle through nameplates/targets by name
-    local marked = 0
-    TargetByName("Nightmare Fiend", true)
-    while UnitExists("target") and marked < expectedCount do
-        local _, guid = UnitExists("target")
-        if guid and not fiendGuids[guid] then
-            local mark = GetFreeFiendMark()
-            if mark then
-                fiendGuids[guid] = mark
-                fiendMarks[mark] = guid
-                SetRaidTarget("target", mark)
-                marked = marked + 1
-            else
-                -- No free mark, stop
-                break
+    for _, frame in ipairs({WorldFrame:GetChildren()}) do
+        if frame.GetName and frame:GetName() then
+            local guid = frame:GetName(1)
+            if guid and not fiendGuids[guid] then
+                -- check it's a fiend
+                local name = UnitName(guid)
+                if name == "Nightmare Fiend" then
+                    local mark = GetFreeFiendMark()
+                    if mark then
+                        fiendGuids[guid] = mark
+                        fiendMarks[mark] = guid
+                        SetRaidTarget(guid, mark, true) 
+                    end
+                end
             end
         end
-        TargetNearestEnemy()
     end
-    ClearTarget()
 end
 
 function module:HandleFiendFixate(player)
     if not player then return end
 
-    -- Only the fixated player should /say
     if UnitName("player") ~= player then return end
 
     local correctMark = nil
 
-    -- Try to find which fiend is targeting the player
-    for mark, guid in pairs(fiendMarks) do
-        -- Scan raid targets to find the fiend unit
-        for i = 1, GetNumRaidMembers() do
-            local unit = "raid"..i.."target"
-            if UnitExists(unit) then
-                local _, uguid = UnitExists(unit)
-                if uguid == guid then
-                    -- Check if this fiend is targeting the player
-                    local target = UnitName(unit.."target")
-                    if target == player then
-                        correctMark = mark
-                        break
-                    end
+    for _, frame in ipairs({WorldFrame:GetChildren()}) do
+        if frame.GetName and frame:GetName() then
+            local guid = frame:GetName(1)
+            if guid and fiendGuids[guid] then
+                -- Vérifier la cible du fiend
+                local target = UnitName(guid.."target")
+                if target == player then
+                    correctMark = fiendGuids[guid]
+                    break
                 end
             end
         end
-        if correctMark then break end
     end
 
-    -- Fallback if we couldn't detect the correct fiend
     if not correctMark then
         SendChatMessage("CRAWLER ON ME", "SAY")
         return
     end
 
-    -- Convert mark to text
     local fixateTexts = {
         [8] = L["fixate_say_skull"],
         [7] = L["fixate_say_cross"],
@@ -672,6 +647,7 @@ function module:HandleFiendFixate(player)
     local sayText = fixateTexts[correctMark] or "CRAWLER ON ME"
     SendChatMessage(sayText, "SAY")
 end
+
 
 function module:HandleFiendDeath(guid)
     if not guid then return end
@@ -775,18 +751,25 @@ end
 ------------------------------------------------
 
 function module:HandleImmunityStart()
-    self:Bar(L["immunity_bar"], timers.immunity, icons.immunity, true, colors.immunity)
     self:Message("Everyone is immune for 30 seconds!", "Positive")
+    -- Stop fiends
     fiendSpawnActive = false
     self:CancelScheduledEvent("UrsolFiendWaveTimer")
+    -- Remove bars
+    self:RemoveBar(L["fiends_bar"])
+    self:RemoveBar(L["rumble_bar"])
+    self:RemoveBar(L["roar_bar"])
+    -- Add immunity bars
+    self:Bar(L["immunity_bar"], timers.immunity, icons.immunity, true, colors.immunity)
+    self:Bar(L["ursol_immunity_bar"], timers.ursol_immune + timers.immunity, icons.immunity, true, colors.immunity)
 end
 
 
 -- tests
---SLASH_URSOLTEST1 = "/ursoltest"
---SlashCmdList["URSOLTEST"] = function(msg)
---    module:Test(msg)
---end
+SLASH_URSOLTEST1 = "/ursoltest"
+SlashCmdList["URSOLTEST"] = function(msg)
+    module:Test(msg)
+end
 function module:Test(msg)
     if msg == "twisted" then
         self:HandleTwisted(corrupter1_guid or "FAKEGUID1")

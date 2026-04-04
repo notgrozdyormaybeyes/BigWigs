@@ -3,7 +3,7 @@ local module, L = BigWigs:ModuleDeclaration("Loktanag the Vile", "Timbermaw Hold
 
 
 module.revision = 30020
-module.enabletrigger = "Loktanag"
+module.enabletrigger = "Loktanag the Vile"
 module.toggleoptions = {"bosskill"}
 module.zonename = "TimbermawHold"
 

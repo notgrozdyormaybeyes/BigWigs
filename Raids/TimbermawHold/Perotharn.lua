@@ -212,8 +212,7 @@ end
 
 function module:OnDisengage()
     self:CancelAllScheduledEvents()
-	self:TriggerEvent("BigWigs_StopHPBar", self, "Good")
-	self:TriggerEvent("BigWigs_StopHPBar", self, "Bad")
+	self:TriggerEvent("BigWigs_StopHPBar", self, "ShieldBar")
     if IsRaidLeader() then
         for i = 1, GetNumRaidMembers() do
             SetRaidTarget("raid"..i, 0)

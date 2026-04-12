@@ -67,6 +67,7 @@ L:RegisterTranslations("enUS", function() return {
     fixate_spell = "Fixate",
     possess_spell = "Possess",
     trig_immunity = "You are afflicted by Presence of the Wild God",
+    trig_ursol_end_immunity = "Presence of the Wild God fades from Ursol",
 
     -- Warnings
     twisted_skull = "Interrupt SKULL!",
@@ -97,6 +98,7 @@ L:RegisterTranslations("enUS", function() return {
     i_am_mc = " is MC'd, HIT ME",
     immunity_bar = "Everyone immune",
     ursol_immunity_bar = "Ursol is immune",
+    ursol_end_immunity_rw = "Ursol can be damaged, FOCUS URSOL",
 
 } end)
 
@@ -145,7 +147,7 @@ local timers = {
     fiendWave = 15,
     nightmareFire = 24,
     immunity = 30,
-    ursol_immune = 135,
+    ursol_immune = 100,
 }
 
 local icons = {
@@ -408,6 +410,10 @@ function module:OnCombatLog(msg)
         -- Immune phase
         if string.find(msg, L["trig_immunity"]) then
             self:Sync(syncName.immunityStart)
+            return
+        end
+        if string.find(msg, L["trig_ursol_end_immunity"]) then
+            self:UrsolImmunityEnd()
             return
         end
     end
@@ -736,6 +742,13 @@ function module:HandleImmunityStart()
     -- Add immunity bars
     self:Bar(L["immunity_bar"], timers.immunity, icons.immunity, true, colors.immunity)
     self:Bar(L["ursol_immunity_bar"], timers.ursol_immune + timers.immunity, icons.immunity, true, colors.immunity)
+end
+
+function module:UrsolImmunityEnd()
+	self:TriggerEvent("BigWigs_StopBar", self, L["ursol_immunity_bar"])
+    if IsRaidLeader() then
+        SendChatMessage(L["ursol_end_immunity_rw"], "RAID_WARNING")
+    end
 end
 
 

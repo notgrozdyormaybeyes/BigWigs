@@ -145,7 +145,7 @@ local timers = {
     fiendWave = 15,
     nightmareFire = 24,
     immunity = 30,
-    ursol_immune = 95,
+    ursol_immune = 135,
 }
 
 local icons = {

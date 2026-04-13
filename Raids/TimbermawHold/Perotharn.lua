@@ -65,7 +65,8 @@ L:RegisterTranslations("enUS", function() return {
     shield_part_two = " absorbed)",
     
     
-    trigger_engage = "no yell engage rip",
+    trigger_engage = "rip trigger engage :(",
+    trigger_yell_pTwo = "Wretched pests! You shall join the ranks of the enlightened!",
     trigger_bossDead = "The dieing is dead",
 } end)
 
@@ -154,6 +155,11 @@ function module:OnEnable()
     self:RegisterEvent("CHAT_MSG_SPELL_AURA_GONE_SELF", "Event")
     self:RegisterEvent("CHAT_MSG_SPELL_AURA_GONE_PARTY", "Event")
     self:RegisterEvent("CHAT_MSG_SPELL_AURA_GONE_OTHER", "Event")
+    self:RegisterEvent("CHAT_MSG_SPELL_CREATURE_VS_CREATURE_BUFF", "Event")
+    self:RegisterEvent("CHAT_MSG_SPELL_PERIODIC_CREATURE_BUFFS", "Event")
+    self:RegisterEvent("CHAT_MSG_SPELL_CREATURE_VS_SELF_BUFF", "Event")
+    
+    self:RegisterEvent("CHAT_MSG_SPELL_PERIODIC_CREATURE_BUFFS", "ShieldCount")
     self:RegisterEvent("CHAT_MSG_COMBAT_CREATURE_VS_CREATURE_HITS", "ShieldCount")
     self:RegisterEvent("CHAT_MSG_COMBAT_FRIENDLYPLAYER_HITS", "ShieldCount")
     self:RegisterEvent("CHAT_MSG_COMBAT_HOSTILEPLAYER_HITS", "ShieldCount")
@@ -165,6 +171,11 @@ function module:OnEnable()
     self:RegisterEvent("CHAT_MSG_SPELL_PARTY_DAMAGE", "ShieldCount")
     self:RegisterEvent("CHAT_MSG_SPELL_FRIENDLYPLAYER_DAMAGE", "ShieldCount")
     self:RegisterEvent("CHAT_MSG_SPELL_PERIODIC_HOSTILEPLAYER_DAMAGE", "ShieldCount")
+    self:RegisterEvent("CHAT_MSG_SPELL_PERIODIC_CREATURE_DAMAGE", "ShieldCount")
+    self:RegisterEvent("CHAT_MSG_SPELL_CREATURE_VS_CREATURE_BUFF", "ShieldCount")
+    self:RegisterEvent("CHAT_MSG_SPELL_PERIODIC_CREATURE_BUFFS", "ShieldCount")
+    self:RegisterEvent("CHAT_MSG_SPELL_CREATURE_VS_SELF_BUFF", "ShieldCount")
+    
     self:RegisterEvent("UNIT_HEALTH")
     self.phaseTwoShield = phaseTwoMaxShield
 
@@ -253,8 +264,9 @@ function module:Event(msg)
         self:Sync(syncName.minisatyrmc.." "..mcPlayer)
     elseif string.find(msg, L["trigger_bossDead"]) then
         self:SendBossDeathSync()
-    elseif not phaseTwoStarted and string.find(msg, L["pTwo_trig"]) then
-        self:ScheduleRepeatingEvent("CheckDebuffs", self.CheckDebuffs, 0.2, self)
+    elseif not phaseTwoStarted and (string.find(msg, L["pTwo_trig"]) or string.find(msg, L["trigger_yell_pTwo"]) ) then
+        phaseTwoStarted = true
+        self:ScheduleRepeatingEvent("CheckDebuffs", self.CheckDebuffs, 0.01, self)
         self:TriggerEvent("BigWigs_StartHPBar", self, "ShieldBar", 100 , "Interface\\Icons\\" .. icon.shield, true, color.shield)
         self:TriggerEvent("BigWigs_SetHPBar", self, "ShieldBar", 1 )
     elseif phaseTwoStarted and string.find(msg, L["pTwo_shield_break"]) and self.phaseTwoShield <= 5000 then
@@ -331,6 +343,8 @@ function module:CheckDebuffs()
         elseif igotmcd and debufficon == "Interface\\Icons\\"..icon.iampower then
             self:Message(L["mc_freepowah"], "Important")
             igotmcd = false
+        elseif debufficon == "Interface\\Icons\\".."Spell_Shadow_MindRot" and UnitName("player") == "Grozdy" then
+            print("test successfull")
         end
     end
 end
@@ -452,7 +466,9 @@ function module:Test(msg)
         self:Thunderclap(3001)
     elseif msg == "mini" then
         self:Minisatyr()
+    elseif msg == "testdebuff" then
+        self:CheckDebuffs()
     else
-        print("Commands: mcone, mctwo, flame, TC, mini ")
+        print("Commands: mcone, mctwo, flame, TC, mini, testdebuff ")
     end
 end
